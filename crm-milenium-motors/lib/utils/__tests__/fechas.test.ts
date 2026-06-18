@@ -27,17 +27,23 @@ describe('esSeguimientoPendiente', () => {
   })
   afterEach(() => { vi.useRealTimers() })
 
-  it('retorna true cuando fechaVenta fue hace exactamente 7 días', () => {
-    expect(esSeguimientoPendiente(new Date('2026-06-11'))).toBe(true)
+  it('retorna true cuando fechaVenta fue hace exactamente 7 días y seguimiento no hecho', () => {
+    expect(esSeguimientoPendiente(new Date('2026-06-11'), false)).toBe(true)
   })
-  it('retorna true cuando fechaVenta fue hace más de 7 días', () => {
-    expect(esSeguimientoPendiente(new Date('2026-06-01'))).toBe(true)
+  it('retorna true cuando fechaVenta fue hace más de 7 días y seguimiento no hecho', () => {
+    expect(esSeguimientoPendiente(new Date('2026-06-01'), false)).toBe(true)
   })
   it('retorna false cuando fechaVenta fue hace menos de 7 días', () => {
-    expect(esSeguimientoPendiente(new Date('2026-06-15'))).toBe(false)
+    expect(esSeguimientoPendiente(new Date('2026-06-15'), false)).toBe(false)
   })
   it('retorna false cuando fechaVenta es hoy', () => {
-    expect(esSeguimientoPendiente(new Date('2026-06-18'))).toBe(false)
+    expect(esSeguimientoPendiente(new Date('2026-06-18'), false)).toBe(false)
+  })
+  it('retorna false cuando fechaVenta fue hace 8 días pero seguimiento ya hecho', () => {
+    expect(esSeguimientoPendiente(new Date('2026-06-10'), true)).toBe(false)
+  })
+  it('retorna true cuando fechaVenta fue hace 8 días y seguimiento no hecho', () => {
+    expect(esSeguimientoPendiente(new Date('2026-06-10'), false)).toBe(true)
   })
 })
 

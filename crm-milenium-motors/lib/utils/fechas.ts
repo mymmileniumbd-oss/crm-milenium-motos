@@ -10,8 +10,8 @@ export function calcularGarantiaFibraVencimientoStr(fechaInicioStr: string): str
   return format(addMonths(fecha, 1), 'yyyy-MM-dd')
 }
 
-export function esSeguimientoPendiente(fechaVenta: Date): boolean {
-  return differenceInDays(new Date(), fechaVenta) >= 7
+export function esSeguimientoPendiente(fechaVenta: Date, seguimientoHecho: boolean): boolean {
+  return differenceInDays(new Date(), fechaVenta) >= 7 && !seguimientoHecho
 }
 
 export function calcularDiasTranscurridos(fechaVenta: Date): number {
