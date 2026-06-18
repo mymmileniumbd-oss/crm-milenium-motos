@@ -5,7 +5,7 @@ import { MODELOS_MOTO } from '@/lib/constants'
 export const unidadBaseSchema = z.object({
   n_motor: z.string().min(1, 'N° de motor requerido'),
   n_chasis: z.string().min(1, 'N° de chasis requerido'),
-  modelo: z.enum(MODELOS_MOTO, { required_error: 'Selecciona un modelo' }),
+  modelo: z.enum(MODELOS_MOTO, { error: 'Selecciona un modelo' }),
   tipo_ingreso: z.enum(['Bajo pedido', 'Stock']),
   estado_logistico: z.enum(['Pedida', 'En fibrero', 'En tienda']),
   dua_item: z.string().optional(),
