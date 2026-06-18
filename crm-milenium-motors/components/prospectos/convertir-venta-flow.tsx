@@ -66,8 +66,11 @@ export function ConvertirVentaFlow({ prospecto, unidadesDisponibles }: Props) {
         documento_numero: data.documento_numero,
       })
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Error inesperado'
-      setError(msg)
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        throw e  // Re-throw NEXT_REDIRECT so Next.js can handle the redirect
+      }
       setLoading(false)
     }
   }

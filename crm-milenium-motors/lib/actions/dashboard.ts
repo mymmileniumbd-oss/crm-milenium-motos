@@ -117,15 +117,15 @@ export async function getKPIs(periodo: PeriodoFilter): Promise<KPIs> {
       .lte('fecha_venta', periodo.hasta),
     supabase
       .from('pagos')
-      .select('monto, ventas!inner(fecha_venta)')
-      .gte('ventas.fecha_venta', periodo.desde)
-      .lte('ventas.fecha_venta', periodo.hasta),
+      .select('monto')
+      .gte('fecha_pago', periodo.desde)
+      .lte('fecha_pago', periodo.hasta),
     supabase
       .from('unidades')
       .select('id', { count: 'exact', head: true })
       .eq('estado_comercial', 'Entregada')
-      .gte('updated_at', periodo.desde)
-      .lte('updated_at', periodo.hasta + 'T23:59:59'),
+      .gte('fecha_entrega', periodo.desde)
+      .lte('fecha_entrega', periodo.hasta),
     supabase
       .from('prospectos')
       .select('id', { count: 'exact', head: true })

@@ -27,7 +27,7 @@ export default async function UnidadPage({ params }: { params: { id: string } })
   ])
 
   const fechaVenta = unidad.ventas?.[0]?.fecha_venta ?? ''
-  const mostrarEntregada = unidad.estado_comercial !== 'Entregada'
+  const mostrarEntregada = unidad.estado_comercial === 'Vendida'
 
   return (
     <div className="space-y-4">

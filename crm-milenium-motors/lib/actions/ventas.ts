@@ -11,9 +11,10 @@ export async function crearVenta(unidadId: string, data: VentaFormValues) {
   const validated = ventaSchema.parse(data)
 
   // Verificar que la unidad no tiene ya una venta
-  const { data: ventaExistente } = await supabase
-    .from('ventas').select('id').eq('unidad_id', unidadId).single()
-  if (ventaExistente) throw new Error('Esta unidad ya tiene una venta registrada')
+  const { data: ventaExistente, error: checkError } = await supabase
+    .from('ventas').select('id').eq('unidad_id', unidadId).maybeSingle()
+  if (checkError) throw new Error('Error al verificar venta existente')
+  if (ventaExistente) return { error: 'Esta unidad ya tiene una venta registrada' }
 
   const { data: venta, error } = await supabase
     .from('ventas')

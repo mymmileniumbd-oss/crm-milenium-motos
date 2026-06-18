@@ -17,8 +17,8 @@ ALTER TABLE garantias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reclamos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tramites ENABLE ROW LEVEL SECURITY;
 
--- usuarios: cualquier autenticado puede leer su propio registro
-CREATE POLICY "usuarios_select" ON usuarios FOR SELECT TO authenticated USING (true);
+-- usuarios: cada usuario solo puede leer su propio registro
+CREATE POLICY "usuarios_select" ON usuarios FOR SELECT TO authenticated USING (id = auth.uid());
 
 -- clientes: vendedores CRUD, gerentes solo lectura
 CREATE POLICY "clientes_select" ON clientes FOR SELECT TO authenticated USING (true);

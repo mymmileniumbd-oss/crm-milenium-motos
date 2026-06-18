@@ -24,7 +24,12 @@ export async function middleware(request: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  const rol = usuario?.rol
+  if (!usuario || !usuario.rol) {
+    const loginUrl = new URL('/login', request.url)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  const rol = usuario.rol
 
   // Gerente solo puede acceder a /dashboard
   if (rol === 'gerente' && !pathname.startsWith('/dashboard')) {
