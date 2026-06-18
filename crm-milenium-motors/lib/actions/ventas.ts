@@ -99,5 +99,5 @@ export async function marcarSeguimientoHecho(ventaId: string) {
     .from('ventas').update({ seguimiento_7dias_hecho: true }).eq('id', ventaId)
   if (error) throw new Error(error.message)
   revalidatePath('/seguimientos')
-  revalidatePath('/unidades')
+  revalidatePath('/')
 }
