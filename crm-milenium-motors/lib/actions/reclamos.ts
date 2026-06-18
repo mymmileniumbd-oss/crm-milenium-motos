@@ -1,0 +1,43 @@
+// lib/actions/reclamos.ts
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { createServerClient } from '@/lib/supabase/server'
+import { reclamoSchema, type ReclamoFormValues } from '@/lib/validations/reclamo'
+
+export async function crearReclamo(unidadId: string, data: ReclamoFormValues) {
+  const supabase = createServerClient()
+  const validated = reclamoSchema.parse(data)
+  const { error } = await supabase.from('reclamos').insert({ ...validated, unidad_id: unidadId })
+  if (error) throw new Error(error.message)
+  revalidatePath(`/unidades/${unidadId}`)
+  revalidatePath('/reclamos')
+}
+
+export async function actualizarEstadoReclamo(reclamoId: string, unidadId: string, estado: 'Pendiente' | 'Resuelto') {
+  const supabase = createServerClient()
+  const { error } = await supabase.from('reclamos').update({ estado }).eq('id', reclamoId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/unidades/${unidadId}`)
+  revalidatePath('/reclamos')
+}
+
+export async function obtenerReclamos() {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('reclamos')
+    .select(`
+      id,
+      tipo,
+      fecha_reclamo,
+      descripcion,
+      estado,
+      taller,
+      precio,
+      unidad_id,
+      unidades(id, modelo, n_motor)
+    `)
+    .order('fecha_reclamo', { ascending: false })
+  if (error) throw new Error(error.message)
+  return data
+}
