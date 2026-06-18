@@ -99,6 +99,51 @@ export async function getInventario() {
   }
 }
 
+export interface KPIs {
+  totalVentas: number
+  ingresosTotales: number
+  unidadesEntregadas: number
+  prospectosNuevos: number
+}
+
+export async function getKPIs(periodo: PeriodoFilter): Promise<KPIs> {
+  const supabase = createServerClient()
+
+  const [ventasRes, pagosRes, unidadesRes, prospectosRes] = await Promise.all([
+    supabase
+      .from('ventas')
+      .select('id', { count: 'exact', head: true })
+      .gte('fecha_venta', periodo.desde)
+      .lte('fecha_venta', periodo.hasta),
+    supabase
+      .from('pagos')
+      .select('monto, ventas!inner(fecha_venta)')
+      .gte('ventas.fecha_venta', periodo.desde)
+      .lte('ventas.fecha_venta', periodo.hasta),
+    supabase
+      .from('unidades')
+      .select('id', { count: 'exact', head: true })
+      .eq('estado_comercial', 'Entregada')
+      .gte('updated_at', periodo.desde)
+      .lte('updated_at', periodo.hasta + 'T23:59:59'),
+    supabase
+      .from('prospectos')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', periodo.desde)
+      .lte('created_at', periodo.hasta + 'T23:59:59'),
+  ])
+
+  const ingresosTotales = ((pagosRes.data ?? []) as { monto: number | string }[])
+    .reduce((acc, p) => acc + Number(p.monto), 0)
+
+  return {
+    totalVentas: ventasRes.count ?? 0,
+    ingresosTotales,
+    unidadesEntregadas: unidadesRes.count ?? 0,
+    prospectosNuevos: prospectosRes.count ?? 0,
+  }
+}
+
 export async function getCuentasPorCobrar(): Promise<CuentaCobrar[]> {
   const supabase = createServerClient()
   const { data: ventas, error } = await supabase

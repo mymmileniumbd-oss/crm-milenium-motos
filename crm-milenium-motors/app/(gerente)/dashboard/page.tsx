@@ -7,8 +7,10 @@ import {
   getProspectosPorEtapa,
   getInventario,
   getCuentasPorCobrar,
+  getKPIs,
 } from '@/lib/actions/dashboard'
 import { PeriodoFilter } from '@/components/dashboard/periodo-filter'
+import { KpiCards } from '@/components/dashboard/kpi-cards'
 import { VentasChart } from '@/components/dashboard/ventas-chart'
 import { ComprasChart } from '@/components/dashboard/compras-chart'
 import { UtilidadSection } from '@/components/dashboard/utilidad-section'
@@ -38,7 +40,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     hasta: searchParams.hasta ?? defecto.hasta,
   }
 
-  const [ventas, compras, utilidades, prospectos, inventario, cuentas] =
+  const [ventas, compras, utilidades, prospectos, inventario, cuentas, kpis] =
     await Promise.all([
       getDatosVentas(periodo),
       getDatosCompras(periodo),
@@ -46,6 +48,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       getProspectosPorEtapa(),
       getInventario(),
       getCuentasPorCobrar(),
+      getKPIs(periodo),
     ])
 
   return (
@@ -53,6 +56,8 @@ export default async function DashboardPage({ searchParams }: Props) {
       <Suspense fallback={<div className="h-16 bg-white border rounded-lg animate-pulse" />}>
         <PeriodoFilter />
       </Suspense>
+
+      <KpiCards kpis={kpis} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <VentasChart ventas={ventas ?? []} />
