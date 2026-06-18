@@ -10,6 +10,9 @@ import { TiendaSection } from '@/components/unidades/sections/tienda-section'
 import { VentaSection } from '@/components/unidades/sections/venta-section'
 import { PagosSection } from '@/components/unidades/sections/pagos-section'
 import { MarcarEntregadaButton } from '@/components/unidades/marcar-entregada-button'
+import { GarantiasSection } from '@/components/unidades/sections/garantias-section'
+import { ReclamosSection } from '@/components/unidades/sections/reclamos-section'
+import { TramitesSection } from '@/components/unidades/sections/tramites-section'
 import {
   Accordion,
   AccordionContent,
@@ -109,33 +112,30 @@ export default async function UnidadPage({ params }: { params: { id: string } })
           </AccordionContent>
         </AccordionItem>
 
-        {/* Placeholder: Task 12 agregará sección Garantía */}
-        <AccordionItem value="garantia" className="bg-white border rounded-lg px-4">
+        <AccordionItem value="garantias" className="bg-white border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">
-            Garantía
+            Garantías
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-gray-400">Sin datos aún</p>
+            <GarantiasSection unidad={unidad} />
           </AccordionContent>
         </AccordionItem>
 
-        {/* Placeholder: Task 12 agregará sección Reclamos */}
         <AccordionItem value="reclamos" className="bg-white border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">
             Reclamos
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-gray-400">Sin datos aún</p>
+            <ReclamosSection unidad={unidad} />
           </AccordionContent>
         </AccordionItem>
 
-        {/* Placeholder: Task 12 agregará sección Trámites */}
         <AccordionItem value="tramites" className="bg-white border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">
             Trámites
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-gray-400">Sin datos aún</p>
+            <TramitesSection unidad={unidad} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
