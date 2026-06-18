@@ -3,6 +3,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { addMonths, format } from 'date-fns'
 import { createServerClient } from '@/lib/supabase/server'
 import { unidadBaseSchema, compraSchema, fibraSchema, type UnidadBaseValues, type CompraValues, type FibraValues } from '@/lib/validations/unidad'
 
@@ -107,5 +108,35 @@ export async function asignarCliente(unidadId: string, clienteId: string) {
   const { error } = await supabase
     .from('unidades').update({ cliente_id: clienteId }).eq('id', unidadId)
   if (error) throw new Error(error.message)
+  revalidatePath(`/unidades/${unidadId}`)
+}
+
+export async function marcarEntregada(unidadId: string, fechaEntrega: string, fechaVenta: string) {
+  if (fechaVenta && new Date(fechaEntrega) < new Date(fechaVenta)) {
+    throw new Error('La fecha de entrega no puede ser anterior a la fecha de venta')
+  }
+  const supabase = createServerClient()
+
+  const { error: unidadError } = await supabase
+    .from('unidades')
+    .update({ estado_comercial: 'Entregada', fecha_entrega: fechaEntrega })
+    .eq('id', unidadId)
+  if (unidadError) throw new Error(unidadError.message)
+
+  const vencimiento = format(addMonths(new Date(fechaEntrega), 1), 'yyyy-MM-dd')
+  const { error: garantiaError } = await supabase
+    .from('garantias')
+    .upsert(
+      {
+        unidad_id: unidadId,
+        garantia_moto_km: 24000,
+        garantia_moto_inicio: fechaEntrega,
+        garantia_fibra_inicio: fechaEntrega,
+        garantia_fibra_vencimiento: vencimiento,
+      },
+      { onConflict: 'unidad_id' }
+    )
+  if (garantiaError) throw new Error(garantiaError.message)
+
   revalidatePath(`/unidades/${unidadId}`)
 }
