@@ -1,11 +1,14 @@
 // app/(vendedor)/unidades/[id]/page.tsx
 import Link from 'next/link'
 import { obtenerUnidad } from '@/lib/actions/unidades'
+import { obtenerClientes } from '@/lib/actions/clientes'
 import { BadgeLogistico, BadgeComercial } from '@/components/unidades/estado-badges'
 import { DatosGeneralesSection } from '@/components/unidades/sections/datos-generales-section'
 import { CompraSection } from '@/components/unidades/sections/compra-section'
 import { FibraSection } from '@/components/unidades/sections/fibra-section'
 import { TiendaSection } from '@/components/unidades/sections/tienda-section'
+import { VentaSection } from '@/components/unidades/sections/venta-section'
+import { PagosSection } from '@/components/unidades/sections/pagos-section'
 import { MarcarEntregadaButton } from '@/components/unidades/marcar-entregada-button'
 import {
   Accordion,
@@ -14,10 +17,11 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-// Las secciones de Venta, Pagos, Garantías, Reclamos y Trámites
-// se agregan en Tasks 9 y 12 — se dejan como placeholders por ahora.
 export default async function UnidadPage({ params }: { params: { id: string } }) {
-  const unidad = await obtenerUnidad(params.id)
+  const [unidad, clientes] = await Promise.all([
+    obtenerUnidad(params.id),
+    obtenerClientes(),
+  ])
 
   const fechaVenta = unidad.ventas?.[0]?.fecha_venta ?? ''
   const mostrarEntregada = unidad.estado_comercial !== 'Entregada'
@@ -87,23 +91,21 @@ export default async function UnidadPage({ params }: { params: { id: string } })
           </AccordionContent>
         </AccordionItem>
 
-        {/* Placeholder: Task 9 agregará sección Venta */}
         <AccordionItem value="venta" className="bg-white border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">
             Venta
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-gray-400">Sin datos aún</p>
+            <VentaSection unidad={unidad} clientes={clientes} />
           </AccordionContent>
         </AccordionItem>
 
-        {/* Placeholder: Task 9 agregará sección Pagos */}
         <AccordionItem value="pagos" className="bg-white border rounded-lg px-4">
           <AccordionTrigger className="text-base font-semibold">
             Pagos
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm text-gray-400">Sin datos aún</p>
+            <PagosSection unidad={unidad} />
           </AccordionContent>
         </AccordionItem>
 
