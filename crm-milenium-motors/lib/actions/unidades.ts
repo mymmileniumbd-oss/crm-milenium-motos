@@ -72,6 +72,10 @@ export async function crearUnidad(data: UnidadBaseValues) {
 }
 
 export async function actualizarEstadoLogistico(id: string, estado: string) {
+  const ESTADOS_PERMITIDOS = ['Pedida', 'En fibrero', 'En tienda'] as const
+  if (!ESTADOS_PERMITIDOS.includes(estado as typeof ESTADOS_PERMITIDOS[number])) {
+    throw new Error('Estado logístico inválido')
+  }
   const supabase = createServerClient()
   const { error } = await supabase
     .from('unidades').update({ estado_logistico: estado }).eq('id', id)
@@ -116,6 +120,11 @@ export async function marcarEntregada(unidadId: string, fechaEntrega: string, fe
     throw new Error('La fecha de entrega no puede ser anterior a la fecha de venta')
   }
   const supabase = createServerClient()
+
+  const { data: unidad, error: checkError } = await supabase
+    .from('unidades').select('estado_comercial').eq('id', unidadId).single()
+  if (checkError || !unidad) throw new Error('Unidad no encontrada')
+  if (unidad.estado_comercial !== 'Vendida') throw new Error('La unidad debe estar en estado Vendida')
 
   const { error: unidadError } = await supabase
     .from('unidades')
