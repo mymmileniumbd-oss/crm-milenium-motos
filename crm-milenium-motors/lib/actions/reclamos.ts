@@ -23,14 +23,15 @@ export async function editarReclamo(reclamoId: string, unidadId: string, data: R
   revalidatePath('/reclamos')
 }
 
-export async function actualizarEstadoReclamo(reclamoId: string, unidadId: string, estado: 'Pendiente' | 'Resuelto') {
+export async function actualizarEstadoReclamo(
+  reclamoId: string,
+  unidadId: string,
+  estado: 'Pendiente' | 'Resuelto',
+  fechaResolucion?: string
+) {
   const supabase = createServerClient()
   const update: Record<string, unknown> = { estado }
-  if (estado === 'Resuelto') {
-    update.fecha_resolucion = new Date().toISOString().split('T')[0]
-  } else {
-    update.fecha_resolucion = null
-  }
+  update.fecha_resolucion = estado === 'Resuelto' ? (fechaResolucion ?? null) : null
   const { error } = await supabase.from('reclamos').update(update).eq('id', reclamoId)
   if (error) throw new Error(error.message)
   revalidatePath(`/unidades/${unidadId}`)

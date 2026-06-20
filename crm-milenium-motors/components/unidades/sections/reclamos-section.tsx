@@ -6,6 +6,7 @@ import { Pencil } from 'lucide-react'
 import { crearReclamo, editarReclamo, actualizarEstadoReclamo } from '@/lib/actions/reclamos'
 import { ReclamoForm } from '@/components/reclamos/reclamo-form'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { formatSoles } from '@/lib/utils/format'
 import type { ReclamoFormValues } from '@/lib/validations/reclamo'
 
@@ -13,12 +14,20 @@ import type { ReclamoFormValues } from '@/lib/validations/reclamo'
 export function ReclamosSection({ unidad }: { unidad: any }) {
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [resolviendoId, setResolviendoId] = useState<string | null>(null)
+  const [fechaResolucion, setFechaResolucion] = useState(new Date().toISOString().split('T')[0])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reclamos: any[] = unidad.reclamos ?? []
 
   async function handleEditar(reclamoId: string, data: ReclamoFormValues) {
     await editarReclamo(reclamoId, unidad.id, data)
     setEditandoId(null)
+  }
+
+  async function handleResolver(reclamoId: string) {
+    await actualizarEstadoReclamo(reclamoId, unidad.id, 'Resuelto', fechaResolucion)
+    setResolviendoId(null)
+    setFechaResolucion(new Date().toISOString().split('T')[0])
   }
 
   return (
@@ -91,15 +100,32 @@ export function ReclamosSection({ unidad }: { unidad: any }) {
                 {r.fecha_resolucion && (
                   <p className="text-green-700 text-xs">Resuelto el: {r.fecha_resolucion}</p>
                 )}
-                {r.estado === 'Pendiente' && (
+                {r.estado === 'Pendiente' && resolviendoId !== r.id && (
                   <Button
                     size="sm"
                     variant="outline"
                     className="h-6 text-xs"
-                    onClick={() => actualizarEstadoReclamo(r.id, unidad.id, 'Resuelto')}
+                    onClick={() => { setResolviendoId(r.id); setFechaResolucion(new Date().toISOString().split('T')[0]) }}
                   >
                     Marcar resuelto
                   </Button>
+                )}
+                {resolviendoId === r.id && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <label className="text-xs text-gray-500 whitespace-nowrap">Fecha resolución:</label>
+                    <Input
+                      type="date"
+                      value={fechaResolucion}
+                      onChange={e => setFechaResolucion(e.target.value)}
+                      className="h-7 text-xs w-36"
+                    />
+                    <Button size="sm" className="h-7 text-xs" onClick={() => handleResolver(r.id)}>
+                      Confirmar
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setResolviendoId(null)}>
+                      Cancelar
+                    </Button>
+                  </div>
                 )}
               </>
             )}
