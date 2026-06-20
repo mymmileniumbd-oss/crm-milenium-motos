@@ -10,7 +10,14 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
-export function ReclamoForm({ onSubmit }: { onSubmit: (data: ReclamoFormValues) => Promise<void> }) {
+interface ReclamoFormProps {
+  onSubmit: (data: ReclamoFormValues) => Promise<void>
+  defaultValues?: Partial<ReclamoFormValues>
+  submitLabel?: string
+  onCancel?: () => void
+}
+
+export function ReclamoForm({ onSubmit, defaultValues, submitLabel = 'Registrar reclamo', onCancel }: ReclamoFormProps) {
   const form = useForm<ReclamoFormValues>({
     resolver: zodResolver(reclamoSchema),
     defaultValues: {
@@ -19,6 +26,7 @@ export function ReclamoForm({ onSubmit }: { onSubmit: (data: ReclamoFormValues) 
       estado: 'Pendiente',
       descripcion: '',
       taller: '',
+      ...defaultValues,
     },
   })
 
@@ -113,9 +121,16 @@ export function ReclamoForm({ onSubmit }: { onSubmit: (data: ReclamoFormValues) 
             </FormItem>
           )}
         />
-        <Button type="submit" size="sm" disabled={form.formState.isSubmitting}>
-          Registrar reclamo
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" size="sm" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Guardando...' : submitLabel}
+          </Button>
+          {onCancel && (
+            <Button type="button" size="sm" variant="outline" onClick={onCancel}>
+              Cancelar
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   )

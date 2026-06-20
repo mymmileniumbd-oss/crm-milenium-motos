@@ -14,6 +14,15 @@ export async function crearReclamo(unidadId: string, data: ReclamoFormValues) {
   revalidatePath('/reclamos')
 }
 
+export async function editarReclamo(reclamoId: string, unidadId: string, data: ReclamoFormValues) {
+  const supabase = createServerClient()
+  const validated = reclamoSchema.parse(data)
+  const { error } = await supabase.from('reclamos').update(validated).eq('id', reclamoId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/unidades/${unidadId}`)
+  revalidatePath('/reclamos')
+}
+
 export async function actualizarEstadoReclamo(reclamoId: string, unidadId: string, estado: 'Pendiente' | 'Resuelto') {
   const supabase = createServerClient()
   const { error } = await supabase.from('reclamos').update({ estado }).eq('id', reclamoId)
