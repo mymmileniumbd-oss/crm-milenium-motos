@@ -14,7 +14,7 @@ export type ModeloMoto = typeof MODELOS_MOTO[number]
 
 export const ESTADOS_LOGISTICO = ['Pedida', 'En fibrero', 'En tienda'] as const
 export const ESTADOS_COMERCIAL = ['Separada', 'Vendida', 'Entregada'] as const
-export const ETAPAS_PROSPECTO = ['Interesado', 'Cotizó', 'Dio adelanto', 'Vendido', 'Desistió'] as const
+export const ETAPAS_PROSPECTO = ['Interesado', 'Dio adelanto', 'Vendido', 'Desistió'] as const
 export const ORIGENES_PROSPECTO = ['Facebook', 'Referido', 'Visita a tienda', 'Otro'] as const
 export const TIPOS_PAGO = ['Adelanto', 'Saldo', 'Contado'] as const
 export const TIPOS_VENTA = ['Contado', 'Separación'] as const

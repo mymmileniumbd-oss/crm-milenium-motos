@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const COLORES_ETAPA: Record<string, string> = {
   'Interesado': 'bg-blue-100 text-blue-700',
-  'Cotizó': 'bg-yellow-100 text-yellow-700',
   'Dio adelanto': 'bg-orange-100 text-orange-700',
   'Vendido': 'bg-green-100 text-green-700',
   'Desistió': 'bg-gray-100 text-gray-600',

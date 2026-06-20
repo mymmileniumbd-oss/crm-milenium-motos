@@ -41,7 +41,7 @@ export async function crearProspecto(data: ProspectoFormValues) {
 }
 
 export async function actualizarEtapaProspecto(id: string, etapa: string) {
-  const ETAPAS_PERMITIDAS = ['Interesado', 'Cotizó', 'Dio adelanto', 'Vendido', 'Desistió'] as const
+  const ETAPAS_PERMITIDAS = ['Interesado', 'Dio adelanto', 'Vendido', 'Desistió'] as const
   if (!ETAPAS_PERMITIDAS.includes(etapa as typeof ETAPAS_PERMITIDAS[number])) {
     throw new Error('Etapa inválida')
   }
