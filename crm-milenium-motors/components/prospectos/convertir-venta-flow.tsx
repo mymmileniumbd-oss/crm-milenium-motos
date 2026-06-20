@@ -124,7 +124,7 @@ export function ConvertirVentaFlow({ prospecto, unidadesDisponibles }: Props) {
                 <SelectContent>
                   {unidadesDisponibles.map(u => (
                     <SelectItem key={u.id} value={u.id}>
-                      {u.modelo} — Motor: {u.n_motor}
+                      {u.modelo} — Motor: {u.n_motor} — Chasis: {u.n_chasis}
                     </SelectItem>
                   ))}
                 </SelectContent>
