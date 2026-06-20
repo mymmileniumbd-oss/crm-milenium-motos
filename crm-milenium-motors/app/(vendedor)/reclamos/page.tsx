@@ -1,19 +1,43 @@
 // app/(vendedor)/reclamos/page.tsx
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { obtenerReclamos } from '@/lib/actions/reclamos'
+import { TramitesFiltro } from '@/components/tramites/tramites-filtro'
 import { formatSoles } from '@/lib/utils/format'
 
-export default async function ReclamosPage() {
-  const reclamos = await obtenerReclamos()
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+
+export default async function ReclamosPage({
+  searchParams,
+}: {
+  searchParams: { mes?: string; anio?: string }
+}) {
+  const ahora = new Date()
+  const mes = Number(searchParams.mes ?? ahora.getMonth() + 1)
+  const anio = Number(searchParams.anio ?? ahora.getFullYear())
+  const prefijo = `${anio}-${String(mes).padStart(2, '0')}`
+
+  const todos = await obtenerReclamos()
+  const reclamos = todos.filter(r => r.fecha_reclamo?.startsWith(prefijo))
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Reclamos</h1>
+        <Suspense>
+          <TramitesFiltro />
+        </Suspense>
       </div>
+      <p className="text-sm text-gray-500">
+        Mostrando reclamos de <span className="font-medium">{MESES[mes - 1]} {anio}</span>
+        {' · '}{reclamos.length} resultado{reclamos.length !== 1 ? 's' : ''}
+      </p>
       <div className="bg-white rounded-lg border overflow-hidden">
         {reclamos.length === 0 ? (
-          <p className="p-6 text-gray-500 text-center">No hay reclamos registrados</p>
+          <p className="p-6 text-gray-500 text-center">No hay reclamos para este mes</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
@@ -52,13 +76,9 @@ export default async function ReclamosPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-medium ${
-                          r.tipo === 'Moto'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}
-                      >
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                        r.tipo === 'Moto' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'
+                      }`}>
                         {r.tipo}
                       </span>
                     </td>
@@ -72,13 +92,9 @@ export default async function ReclamosPage() {
                       {r.precio != null ? formatSoles(Number(r.precio)) : <span className="text-gray-400">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-medium ${
-                          r.estado === 'Resuelto'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
+                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                        r.estado === 'Resuelto' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
                         {r.estado}
                       </span>
                     </td>
