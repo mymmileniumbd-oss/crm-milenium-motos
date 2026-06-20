@@ -88,6 +88,9 @@ export function ReclamosSection({ unidad }: { unidad: any }) {
                 {r.taller && <p className="text-gray-500">Taller: {r.taller}</p>}
                 {r.precio && <p className="text-gray-500">Costo: {formatSoles(Number(r.precio))}</p>}
                 <p className="text-gray-400">{r.fecha_reclamo}</p>
+                {r.fecha_resolucion && (
+                  <p className="text-green-700 text-xs">Resuelto el: {r.fecha_resolucion}</p>
+                )}
                 {r.estado === 'Pendiente' && (
                   <Button
                     size="sm"

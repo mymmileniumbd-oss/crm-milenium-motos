@@ -25,7 +25,13 @@ export async function editarReclamo(reclamoId: string, unidadId: string, data: R
 
 export async function actualizarEstadoReclamo(reclamoId: string, unidadId: string, estado: 'Pendiente' | 'Resuelto') {
   const supabase = createServerClient()
-  const { error } = await supabase.from('reclamos').update({ estado }).eq('id', reclamoId)
+  const update: Record<string, unknown> = { estado }
+  if (estado === 'Resuelto') {
+    update.fecha_resolucion = new Date().toISOString().split('T')[0]
+  } else {
+    update.fecha_resolucion = null
+  }
+  const { error } = await supabase.from('reclamos').update(update).eq('id', reclamoId)
   if (error) throw new Error(error.message)
   revalidatePath(`/unidades/${unidadId}`)
   revalidatePath('/reclamos')
