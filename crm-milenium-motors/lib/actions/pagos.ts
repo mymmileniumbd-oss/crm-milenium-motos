@@ -51,6 +51,48 @@ export async function crearPago(ventaId: string, unidadId: string, data: PagoFor
   revalidatePath('/ventas')
 }
 
+async function recalcularEstados(supabase: ReturnType<typeof createServerClient>, ventaId: string, unidadId: string) {
+  const [{ data: venta }, { data: pagos }, { data: unidad }] = await Promise.all([
+    supabase.from('ventas').select('precio_venta').eq('id', ventaId).single(),
+    supabase.from('pagos').select('monto').eq('venta_id', ventaId),
+    supabase.from('unidades').select('estado_comercial').eq('id', unidadId).single(),
+  ])
+  if (!venta || !pagos) return
+
+  const suma = pagos.reduce((acc, p) => acc + Number(p.monto), 0)
+  const nuevoEstadoPago = calcularEstadoPago(suma, Number(venta.precio_venta))
+  await supabase.from('ventas').update({ estado_pago: nuevoEstadoPago }).eq('id', ventaId)
+
+  if (unidad?.estado_comercial !== 'Entregada') {
+    if (nuevoEstadoPago === 'Pagado') {
+      await supabase.from('unidades').update({ estado_comercial: 'Vendida' }).eq('id', unidadId)
+    } else if (suma === 0) {
+      await supabase.from('unidades').update({ estado_comercial: null }).eq('id', unidadId)
+    } else {
+      await supabase.from('unidades').update({ estado_comercial: 'Separada' }).eq('id', unidadId)
+    }
+  }
+}
+
+export async function editarPago(pagoId: string, ventaId: string, unidadId: string, data: PagoFormValues) {
+  const supabase = createServerClient()
+  const validated = pagoSchema.parse(data)
+  const { error } = await supabase.from('pagos').update(validated).eq('id', pagoId)
+  if (error) throw new Error(error.message)
+  await recalcularEstados(supabase, ventaId, unidadId)
+  revalidatePath(`/unidades/${unidadId}`)
+  revalidatePath('/ventas')
+}
+
+export async function eliminarPago(pagoId: string, ventaId: string, unidadId: string) {
+  const supabase = createServerClient()
+  const { error } = await supabase.from('pagos').delete().eq('id', pagoId)
+  if (error) throw new Error(error.message)
+  await recalcularEstados(supabase, ventaId, unidadId)
+  revalidatePath(`/unidades/${unidadId}`)
+  revalidatePath('/ventas')
+}
+
 export async function obtenerPagosByVenta(ventaId: string) {
   const supabase = createServerClient()
   const { data, error } = await supabase

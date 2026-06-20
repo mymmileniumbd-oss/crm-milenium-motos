@@ -9,7 +9,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-export function PagoForm({ onSubmit }: { onSubmit: (data: PagoFormValues) => Promise<void> }) {
+interface PagoFormProps {
+  onSubmit: (data: PagoFormValues) => Promise<void>
+  defaultValues?: Partial<PagoFormValues>
+  submitLabel?: string
+  onCancel?: () => void
+}
+
+export function PagoForm({ onSubmit, defaultValues, submitLabel = 'Registrar pago', onCancel }: PagoFormProps) {
   const form = useForm<PagoFormValues>({
     resolver: zodResolver(pagoSchema),
     defaultValues: {
@@ -18,6 +25,7 @@ export function PagoForm({ onSubmit }: { onSubmit: (data: PagoFormValues) => Pro
       n_operacion: '',
       n_recibo: '',
       tipo: 'Adelanto',
+      ...defaultValues,
     },
   })
 
@@ -75,9 +83,16 @@ export function PagoForm({ onSubmit }: { onSubmit: (data: PagoFormValues) => Pro
             </FormItem>
           )} />
         </div>
-        <Button type="submit" size="sm" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Registrando...' : 'Registrar pago'}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" size="sm" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Guardando...' : submitLabel}
+          </Button>
+          {onCancel && (
+            <Button type="button" size="sm" variant="outline" onClick={onCancel}>
+              Cancelar
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   )
