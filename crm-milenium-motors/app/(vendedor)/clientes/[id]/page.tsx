@@ -1,11 +1,17 @@
 // app/(vendedor)/clientes/[id]/page.tsx
 import { obtenerCliente, actualizarCliente } from '@/lib/actions/clientes'
 import { ClienteForm } from '@/components/clientes/cliente-form'
+import type { ClienteFormValues } from '@/lib/validations/cliente'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 
 export default async function ClientePage({ params }: { params: { id: string } }) {
   const cliente = await obtenerCliente(params.id)
+
+  async function handleActualizar(data: ClienteFormValues) {
+    'use server'
+    await actualizarCliente(params.id, data)
+  }
 
   return (
     <div className="space-y-6">
@@ -20,7 +26,7 @@ export default async function ClientePage({ params }: { params: { id: string } }
             telefono: cliente.telefono ?? '',
             correo: cliente.correo ?? '',
           }}
-          onSubmit={(data) => actualizarCliente(params.id, data)}
+          onSubmit={handleActualizar}
           submitLabel="Actualizar"
         />
       </div>
