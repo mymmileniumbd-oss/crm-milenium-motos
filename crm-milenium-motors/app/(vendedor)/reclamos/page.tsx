@@ -18,7 +18,8 @@ export default async function ReclamosPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Fecha</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Fecha reclamo</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Fecha resolución</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Unidad</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tipo</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Descripción</th>
@@ -35,6 +36,11 @@ export default async function ReclamosPage() {
                 return (
                   <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{r.fecha_reclamo}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {r.fecha_resolucion
+                        ? <span className="text-green-700">{r.fecha_resolucion}</span>
+                        : <span className="text-gray-400">—</span>}
+                    </td>
                     <td className="px-4 py-3">
                       {unidad ? (
                         <Link href={`/unidades/${unidad.id}`} className="hover:underline font-medium">

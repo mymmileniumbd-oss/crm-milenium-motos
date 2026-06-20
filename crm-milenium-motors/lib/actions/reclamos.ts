@@ -46,6 +46,7 @@ export async function obtenerReclamos() {
       id,
       tipo,
       fecha_reclamo,
+      fecha_resolucion,
       descripcion,
       estado,
       taller,
