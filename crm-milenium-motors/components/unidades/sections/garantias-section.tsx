@@ -1,6 +1,10 @@
 // components/unidades/sections/garantias-section.tsx
-import { format } from 'date-fns'
+import { format, parse } from 'date-fns'
 import { es } from 'date-fns/locale'
+
+function parseLocalDate(dateStr: string) {
+  return parse(dateStr, 'yyyy-MM-dd', new Date())
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function GarantiasSection({ unidad }: { unidad: any }) {
@@ -14,9 +18,9 @@ export function GarantiasSection({ unidad }: { unidad: any }) {
     )
   }
 
-  const inicioMoto = new Date(garantia.garantia_moto_inicio)
-  const inicioFibra = new Date(garantia.garantia_fibra_inicio)
-  const vencFibra = new Date(garantia.garantia_fibra_vencimiento)
+  const inicioMoto = parseLocalDate(garantia.garantia_moto_inicio)
+  const inicioFibra = parseLocalDate(garantia.garantia_fibra_inicio)
+  const vencFibra = parseLocalDate(garantia.garantia_fibra_vencimiento)
 
   return (
     <div className="space-y-4 text-sm">
