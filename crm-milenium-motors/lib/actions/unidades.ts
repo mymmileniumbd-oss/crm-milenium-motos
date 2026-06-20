@@ -115,6 +115,19 @@ export async function asignarCliente(unidadId: string, clienteId: string) {
   revalidatePath(`/unidades/${unidadId}`)
 }
 
+export async function eliminarUnidad(id: string) {
+  const supabase = createServerClient()
+
+  const { data: venta } = await supabase
+    .from('ventas').select('id').eq('unidad_id', id).maybeSingle()
+  if (venta) throw new Error('No se puede eliminar una unidad que tiene una venta registrada')
+
+  const { error } = await supabase.from('unidades').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/unidades')
+}
+
 export async function marcarEntregada(unidadId: string, fechaEntrega: string, fechaVenta: string) {
   if (fechaVenta && new Date(fechaEntrega) < new Date(fechaVenta)) {
     throw new Error('La fecha de entrega no puede ser anterior a la fecha de venta')
