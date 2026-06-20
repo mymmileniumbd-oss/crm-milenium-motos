@@ -1,6 +1,8 @@
 // app/(vendedor)/garantias/page.tsx
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { obtenerGarantias } from '@/lib/actions/garantias'
+import { TramitesFiltro } from '@/components/tramites/tramites-filtro'
 import { format, parse } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -8,17 +10,42 @@ function parseLocalDate(str: string) {
   return parse(str, 'yyyy-MM-dd', new Date())
 }
 
-export default async function GarantiasPage() {
-  const garantias = await obtenerGarantias()
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+
+export default async function GarantiasPage({
+  searchParams,
+}: {
+  searchParams: { mes?: string; anio?: string }
+}) {
+  const ahora = new Date()
+  const mes = Number(searchParams.mes ?? ahora.getMonth() + 1)
+  const anio = Number(searchParams.anio ?? ahora.getFullYear())
+  const prefijo = `${anio}-${String(mes).padStart(2, '0')}`
+
+  const todas = await obtenerGarantias()
+  const garantias = todas.filter(g =>
+    (g.garantia_moto_inicio && g.garantia_moto_inicio.startsWith(prefijo)) ||
+    (g.garantia_fibra_vencimiento && g.garantia_fibra_vencimiento.startsWith(prefijo))
+  )
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Garantías</h1>
+        <Suspense>
+          <TramitesFiltro />
+        </Suspense>
       </div>
+      <p className="text-sm text-gray-500">
+        Mostrando garantías de <span className="font-medium">{MESES[mes - 1]} {anio}</span>
+        {' · '}{garantias.length} resultado{garantias.length !== 1 ? 's' : ''}
+      </p>
       <div className="bg-white rounded-lg border overflow-hidden">
         {garantias.length === 0 ? (
-          <p className="p-6 text-gray-500 text-center">No hay garantías registradas</p>
+          <p className="p-6 text-gray-500 text-center">No hay garantías para este mes</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
