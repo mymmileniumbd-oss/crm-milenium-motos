@@ -33,7 +33,7 @@ export function ProspectoForm({ defaultValues, onSubmit, submitLabel = 'Guardar'
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit((data) => onSubmit({ ...data }))} className="space-y-4">
         <FormField
           control={form.control}
           name="nombre"

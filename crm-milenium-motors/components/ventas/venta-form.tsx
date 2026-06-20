@@ -28,7 +28,7 @@ export function VentaForm({ clientes, clienteIdInicial, onSubmit }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit((data) => onSubmit({ ...data }))} className="space-y-4">
         <FormField control={form.control} name="cliente_id" render={({ field }) => (
           <FormItem><FormLabel>Cliente *</FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
