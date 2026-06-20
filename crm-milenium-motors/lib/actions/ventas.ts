@@ -47,6 +47,41 @@ export async function crearVenta(unidadId: string, data: VentaFormValues) {
   return venta
 }
 
+export async function actualizarVenta(
+  ventaId: string,
+  unidadId: string,
+  data: { fecha_venta: string; precio_venta: number; documento_tipo?: string | null; documento_numero?: string }
+) {
+  const supabase = createServerClient()
+
+  const { error } = await supabase.from('ventas').update({
+    fecha_venta: data.fecha_venta,
+    precio_venta: data.precio_venta,
+    documento_tipo: data.documento_tipo ?? null,
+    documento_numero: data.documento_numero ?? null,
+  }).eq('id', ventaId)
+  if (error) throw new Error(error.message)
+
+  // Recalcular estado_pago con el nuevo precio
+  const { data: pagos } = await supabase.from('pagos').select('monto').eq('venta_id', ventaId)
+  const suma = (pagos ?? []).reduce((acc, p) => acc + Number(p.monto), 0)
+  const nuevoEstado = suma <= 0 ? 'Pendiente' : suma >= data.precio_venta ? 'Pagado' : 'Parcial'
+  await supabase.from('ventas').update({ estado_pago: nuevoEstado }).eq('id', ventaId)
+
+  // Actualizar estado_comercial si corresponde (sin degradar desde Entregada)
+  const { data: unidad } = await supabase.from('unidades').select('estado_comercial').eq('id', unidadId).single()
+  if (unidad?.estado_comercial !== 'Entregada') {
+    if (nuevoEstado === 'Pagado') {
+      await supabase.from('unidades').update({ estado_comercial: 'Vendida' }).eq('id', unidadId)
+    } else if (unidad?.estado_comercial === 'Vendida') {
+      await supabase.from('unidades').update({ estado_comercial: 'Separada' }).eq('id', unidadId)
+    }
+  }
+
+  revalidatePath(`/unidades/${unidadId}`)
+  revalidatePath('/ventas')
+}
+
 export async function obtenerVentas() {
   const supabase = createServerClient()
   const { data, error } = await supabase
