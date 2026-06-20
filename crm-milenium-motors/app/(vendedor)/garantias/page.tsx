@@ -1,8 +1,12 @@
 // app/(vendedor)/garantias/page.tsx
 import Link from 'next/link'
 import { obtenerGarantias } from '@/lib/actions/garantias'
-import { format } from 'date-fns'
+import { format, parse } from 'date-fns'
 import { es } from 'date-fns/locale'
+
+function parseLocalDate(str: string) {
+  return parse(str, 'yyyy-MM-dd', new Date())
+}
 
 export default async function GarantiasPage() {
   const garantias = await obtenerGarantias()
@@ -33,7 +37,7 @@ export default async function GarantiasPage() {
                 const unidad = Array.isArray(g.unidades) ? (g.unidades as any[])[0] : g.unidades
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const cliente = Array.isArray(unidad?.clientes) ? (unidad?.clientes as any[])[0] : unidad?.clientes
-                const vencFibra = g.garantia_fibra_vencimiento ? new Date(g.garantia_fibra_vencimiento) : null
+                const vencFibra = g.garantia_fibra_vencimiento ? parseLocalDate(g.garantia_fibra_vencimiento) : null
                 const vencida = vencFibra ? vencFibra < new Date() : false
 
                 return (
@@ -58,7 +62,7 @@ export default async function GarantiasPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-700">
                       {g.garantia_moto_inicio
-                        ? format(new Date(g.garantia_moto_inicio), 'dd/MM/yyyy', { locale: es })
+                        ? format(parseLocalDate(g.garantia_moto_inicio), 'dd/MM/yyyy', { locale: es })
                         : <span className="text-gray-400">—</span>}
                     </td>
                     <td className="px-4 py-3">
