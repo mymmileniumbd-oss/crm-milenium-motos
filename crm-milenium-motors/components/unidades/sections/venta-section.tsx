@@ -148,6 +148,12 @@ export function VentaSection({ unidad, clientes }: Props) {
             <p>{venta.documento_tipo} {venta.documento_numero}</p>
           </div>
         )}
+        {unidad.fecha_entrega && (
+          <div>
+            <span className="text-gray-500">Fecha de entrega:</span>
+            <p className="font-medium">{unidad.fecha_entrega}</p>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-2">
         {unidad.estado_comercial === 'Vendida' && (
