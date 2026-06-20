@@ -84,7 +84,7 @@ export function PagosSection({ unidad }: { unidad: any }) {
                     <td className="py-2">{p.fecha_pago}</td>
                     <td>{p.tipo}</td>
                     <td className="text-right font-medium pr-6">{formatSoles(Number(p.monto))}</td>
-                    <td className="font-mono pl-2">{p.n_recibo}</td>
+                    <td className="pl-2">{p.n_recibo}</td>
                     <td className="text-gray-500">{p.n_operacion}</td>
                     <td className="text-right">
                       <div className="flex justify-end gap-1">
