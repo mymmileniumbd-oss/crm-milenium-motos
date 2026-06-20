@@ -8,6 +8,7 @@ export const unidadBaseSchema = z.object({
   modelo: z.enum(MODELOS_MOTO, { error: 'Selecciona un modelo' }),
   tipo_ingreso: z.enum(['Bajo pedido', 'Stock']),
   estado_logistico: z.enum(['Pedida', 'En fibrero', 'En tienda']),
+  color: z.enum(['Rojo', 'Azul', 'Verde', 'Negro', 'Amarillo']).optional().nullable(),
   dua_item: z.string().optional(),
   cliente_id: z.string().uuid().optional().nullable(),
 })

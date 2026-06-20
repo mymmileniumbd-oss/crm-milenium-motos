@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MODELOS_MOTO, ESTADOS_LOGISTICO } from '@/lib/constants'
+import { MODELOS_MOTO, ESTADOS_LOGISTICO, COLORES_MOTO } from '@/lib/constants'
 
 export function UnidadForm({ onSubmit }: { onSubmit: (data: UnidadBaseValues) => Promise<void> }) {
   const form = useForm<UnidadBaseValues>({
@@ -18,7 +18,7 @@ export function UnidadForm({ onSubmit }: { onSubmit: (data: UnidadBaseValues) =>
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit((data) => onSubmit({ ...data }))} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="n_motor" render={({ field }) => (
             <FormItem>
@@ -62,18 +62,32 @@ export function UnidadForm({ onSubmit }: { onSubmit: (data: UnidadBaseValues) =>
             </FormItem>
           )} />
         </div>
-        <FormField control={form.control} name="estado_logistico" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Estado logístico inicial *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-              <SelectContent>
-                {ESTADOS_LOGISTICO.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField control={form.control} name="estado_logistico" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Estado logístico inicial *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {ESTADOS_LOGISTICO.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="color" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Color</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {COLORES_MOTO.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
         <FormField control={form.control} name="dua_item" render={({ field }) => (
           <FormItem>
             <FormLabel>DUA - ITEM</FormLabel>

@@ -1,4 +1,7 @@
 // lib/constants.ts
+export const COLORES_MOTO = ['Rojo', 'Azul', 'Verde', 'Negro', 'Amarillo'] as const
+export type ColorMoto = typeof COLORES_MOTO[number]
+
 export const MODELOS_MOTO = [
   'Deluxe GS',
   'Deluxe GLP',
