@@ -121,12 +121,17 @@ export async function obtenerSeguimientosPendientes() {
   const fechaLimite = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const { data, error } = await supabase
     .from('ventas')
-    .select('*, unidades(n_motor, modelo), clientes(nombre_completo)')
-    .lte('fecha_venta', fechaLimite)
+    .select('*, unidades(n_motor, modelo, fecha_entrega), clientes(nombre_completo)')
     .eq('seguimiento_7dias_hecho', false)
     .order('fecha_venta', { ascending: true })
   if (error) throw new Error(error.message)
-  return data
+
+  // Solo mostramos ventas cuya unidad ya fue entregada hace más de 7 días
+  return (data ?? []).filter(v => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unidad = Array.isArray(v.unidades) ? (v.unidades as any[])[0] : v.unidades
+    return unidad?.fecha_entrega && unidad.fecha_entrega <= fechaLimite
+  })
 }
 
 export async function marcarSeguimientoHecho(ventaId: string) {
