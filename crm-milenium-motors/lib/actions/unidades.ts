@@ -46,7 +46,7 @@ export async function obtenerUnidad(id: string) {
         pagos(id, fecha_pago, monto, n_operacion, n_recibo, tipo)
       ),
       garantias(id, garantia_moto_km, garantia_moto_inicio, garantia_fibra_inicio, garantia_fibra_vencimiento),
-      reclamos(id, tipo, fecha_reclamo, descripcion, estado, taller, precio),
+      reclamos(id, tipo, fecha_reclamo, descripcion, estado, taller, precio, fecha_resolucion),
       tramites(id, sunarp_estado, sunarp_fecha, aap_estado, aap_fecha)
     `)
     .eq('id', id)
