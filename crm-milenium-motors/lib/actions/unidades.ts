@@ -122,8 +122,10 @@ export async function eliminarUnidad(id: string) {
     .from('ventas').select('id').eq('unidad_id', id).maybeSingle()
   if (venta) throw new Error('No se puede eliminar una unidad que tiene una venta registrada')
 
-  const { error } = await supabase.from('unidades').delete().eq('id', id)
+  const { error, count } = await supabase
+    .from('unidades').delete({ count: 'exact' }).eq('id', id)
   if (error) throw new Error(error.message)
+  if (count === 0) throw new Error('No se pudo eliminar. Verifica los permisos en Supabase.')
 
   revalidatePath('/unidades')
 }
