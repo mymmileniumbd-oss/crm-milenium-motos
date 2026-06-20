@@ -1,6 +1,4 @@
 // app/(vendedor)/clientes/nuevo/page.tsx
-'use client'
-
 import { ClienteForm } from '@/components/clientes/cliente-form'
 import { crearCliente } from '@/lib/actions/clientes'
 

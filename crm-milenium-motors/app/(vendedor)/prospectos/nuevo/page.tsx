@@ -1,6 +1,4 @@
 // app/(vendedor)/prospectos/nuevo/page.tsx
-'use client'
-
 import { ProspectoForm } from '@/components/prospectos/prospecto-form'
 import { crearProspecto } from '@/lib/actions/prospectos'
 

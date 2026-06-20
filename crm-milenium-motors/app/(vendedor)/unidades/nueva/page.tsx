@@ -1,6 +1,4 @@
 // app/(vendedor)/unidades/nueva/page.tsx
-'use client'
-
 import { UnidadForm } from '@/components/unidades/unidad-form'
 import { crearUnidad } from '@/lib/actions/unidades'
 
