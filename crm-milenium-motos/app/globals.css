@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Milenium Motos — sistema visual (Claude Design) */
+    --background: 220 20% 97%; /* App BG #f6f7f9 */
+    --foreground: 220 28% 15%; /* Ink #1b2230 */
+    --card: 0 0% 100%; /* Surface #fff */
+    --card-foreground: 220 28% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 28% 15%;
+    --primary: 222 75% 48%; /* Azul confianza #1F56D6 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 25% 95%; /* Line / surface sutil #eef1f5 */
+    --secondary-foreground: 220 28% 15%;
+    --muted: 220 20% 97%;
+    --muted-foreground: 218 12% 59%; /* Muted #8a93a3 */
+    --accent: 221 88% 96%; /* Azul claro activo #eef3fe */
+    --accent-foreground: 222 76% 40%; /* Azul hover #1846B3 */
+    --destructive: 0 73% 56%; /* Rojo energía #E23B3B */
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 25% 95%; /* Line #eef1f5 */
+    --input: 216 18% 87%; /* Bordes de inputs #d8dde6 */
+    --ring: 222 75% 48%;
+    --radius: 0.75rem;
+    --chart-1: 222 75% 48%;
+    --chart-2: 152 70% 28%;
+    --chart-3: 27 81% 39%;
+    --chart-4: 42 68% 39%;
+    --chart-5: 218 12% 59%;
+  }
+
+  .dark {
+    --background: 222 28% 9%;
+    --foreground: 210 40% 98%;
+    --card: 222 28% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 28% 12%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 222 75% 58%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 18%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 212 27% 84%;
+    --chart-1: 222 75% 58%;
+    --chart-2: 152 60% 45%;
+    --chart-3: 27 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv01";
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Números tabulares para montos, fechas y códigos */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
