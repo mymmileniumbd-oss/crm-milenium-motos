@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-All commands run from inside `crm-milenium-motors/`.
+All commands run from inside `crm-milenium-motos/` (note: **no "r"** — the folder is `crm-milenium-mot**o**s`, not `motors`). Running `npm run dev` from the repo root fails with `ENOENT package.json`; always `cd crm-milenium-motos` first.
 
 ```bash
 npm run dev          # Start dev server at http://localhost:3000
@@ -100,6 +100,17 @@ Tests cover utility functions only (no DB, no components). Located in `lib/utils
 
 ## UI
 
-shadcn/ui (Tailwind v3, HSL CSS variables, `style: default`, `baseColor: slate`). Accordion in unidad ficha uses `type="multiple"`. Recharts for dashboard charts. Responsive: sidebar desktop (`hidden md:flex`), bottom nav mobile (`md:hidden`).
+shadcn/ui (Tailwind v3, HSL CSS variables). Accordion in unidad ficha uses `type="multiple"`. Recharts for dashboard charts. Responsive: sidebar desktop (`hidden md:flex`), bottom nav mobile (`md:hidden`).
 
 Inline edit pattern (pagos, reclamos, venta): pencil icon per row → replaces row content with form pre-filled via `defaultValues`. On save calls Server Action, on cancel clears editing state.
+
+### Design system (Claude Design)
+
+The whole app is themed through the shadcn HSL CSS variables in `app/globals.css`, so **changing a token propagates everywhere** — prefer remapping tokens over hardcoding colors.
+
+- **Palette** (`app/globals.css` `:root`): `--primary` = Azul confianza `#1F56D6`; `--destructive` = Rojo energía `#E23B3B`; `--background` = `#f6f7f9`; `--foreground` = Ink `#1b2230`; `--border`/`--secondary` = line `#eef1f5`; `--accent` = pale blue `#eef3fe` (sidebar active); `--radius` = `0.75rem`. No dark-mode toggle ships, so `bg-card` === white in practice (legacy `bg-white` was migrated to `bg-card`).
+- **Fonts** (`app/layout.tsx`, `next/font/google`): **Manrope** → `--font-sans` (UI/text/titles); **IBM Plex Mono** → `--font-mono` (codes: placas, motor, chasis, DUA, fechas, montos). Use `font-mono` + `tabular-nums` for codes/amounts. Replaced Geist.
+- **Tailwind tokens** (`tailwind.config.ts`): `brand` (`DEFAULT`/`hover`/`red`) and `estado.*` (green/blue/indigo/orange/amber/red/gray, each `bg`/`fg`/`dot`) for badges that need exact hex outside the HSL scale. `fontFamily.sans/mono` point at `--font-sans`/`--font-mono`.
+- **Estado badges** (`components/unidades/estado-badges.tsx`): `EstadoBadge({ tone })` renders a rounded-full pill with a colored dot; `tone` ∈ green/blue/indigo/orange/amber/red/gray. `BadgeLogistico`/`BadgeComercial`/`BadgeEstadoPago` map domain states → tone. Reuse `EstadoBadge` for any new status pill.
+- **Shared layout components**: `components/nav/sidebar.tsx` exports `BrandMark` (the M logo with red corner) — reused in the gerente topbar. Sidebar is **236px** (`w-[236px]`, main offset `md:ml-[236px]`); active item = `bg-accent` + left blue bar. `components/ui/page-header.tsx` `PageHeader({ title, description, actions })` is the standard page header (21px extrabold title); use it on every list page.
+- **Inline-edit block** (`datos-generales-section.tsx`): the signature highlighted block — left blue bar + "Edición inline" pill with pencil icon, on a `#f3f6fd`/`#cdd9f5` surface.
