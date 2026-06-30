@@ -14,11 +14,15 @@ function SectionSkeleton({ height = 'h-32' }: { height?: string }) {
 export default async function PanelPage({
   searchParams,
 }: {
-  searchParams: { periodo?: string }
+  searchParams: { periodo?: string; mes?: string; anio?: string }
 }) {
   const periodo = (['dia', 'semana', 'mes'].includes(searchParams.periodo ?? '')
     ? searchParams.periodo
     : 'dia') as Periodo
+
+  const hoy = new Date()
+  const mes  = Number(searchParams.mes)  || hoy.getMonth() + 1
+  const anio = Number(searchParams.anio) || hoy.getFullYear()
 
   return (
     <div className="space-y-6">
@@ -29,7 +33,7 @@ export default async function PanelPage({
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton height="h-36" />}>
-        <EmbudoSection periodo={periodo} />
+        <EmbudoSection periodo={periodo} mes={mes} anio={anio} />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton height="h-56" />}>

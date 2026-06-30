@@ -3,8 +3,14 @@ import { PeriodoSelector } from './periodo-selector'
 import { Card, CardContent } from '@/components/ui/card'
 import type { Periodo } from '@/lib/utils/panel'
 
-export async function EmbudoSection({ periodo }: { periodo: Periodo }) {
-  const embudo = await getEmbudoPeriodo(periodo)
+interface Props {
+  periodo: Periodo
+  mes: number
+  anio: number
+}
+
+export async function EmbudoSection({ periodo, mes, anio }: Props) {
+  const embudo = await getEmbudoPeriodo(periodo, mes, anio)
 
   const metricas = [
     { label: 'Leads recibidos', valor: embudo.leadsRecibidos },
@@ -16,7 +22,7 @@ export async function EmbudoSection({ periodo }: { periodo: Periodo }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-[15px] font-extrabold tracking-tight">Embudo del período</h2>
-        <PeriodoSelector periodo={periodo} />
+        <PeriodoSelector periodo={periodo} mes={mes} anio={anio} />
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {metricas.map(({ label, valor }) => (

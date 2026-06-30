@@ -130,9 +130,9 @@ export async function getAlertasLeadsSinContactar(dias: number): Promise<AlertaL
 
 // ─── Embudo ───────────────────────────────────────────────────────────────────
 
-export async function getEmbudoPeriodo(periodo: Periodo): Promise<EmbudoData> {
+export async function getEmbudoPeriodo(periodo: Periodo, mes?: number, anio?: number): Promise<EmbudoData> {
   const supabase = createServerClient()
-  const { desde, hasta } = calcularRangoPeriodo(periodo)
+  const { desde, hasta } = calcularRangoPeriodo(periodo, mes, anio)
   const hastaFin = hasta + 'T23:59:59'
 
   const [leadsRes, adelantosRes, ventasRes] = await Promise.all([
