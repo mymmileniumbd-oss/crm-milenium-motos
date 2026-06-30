@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
 
   // Vendedor no puede acceder a /dashboard
   if (rol === 'vendedor' && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/unidades', request.url))
+    return NextResponse.redirect(new URL('/panel', request.url))
   }
 
   return supabaseResponse

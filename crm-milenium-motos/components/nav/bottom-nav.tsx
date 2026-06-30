@@ -4,13 +4,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Bike, Users, Columns3, ReceiptText } from 'lucide-react'
+import { LayoutDashboard, Bike, Users, Columns3 } from 'lucide-react'
 
 const navItems = [
+  { href: '/panel', label: 'Panel', icon: LayoutDashboard },
   { href: '/unidades', label: 'Unidades', icon: Bike },
   { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/prospectos', label: 'Prospectos', icon: Columns3 },
-  { href: '/ventas', label: 'Ventas', icon: ReceiptText },
 ]
 
 export function BottomNav({ seguimientosPendientes = 0 }: { seguimientosPendientes?: number }) {

@@ -23,3 +23,4 @@ export const TIPOS_RECLAMO = ['Moto', 'Fibra'] as const
 export const ESTADOS_RECLAMO = ['Pendiente', 'Resuelto'] as const
 export const SUNARP_ESTADOS = ['Ingreso', 'En Calificación', 'Inscrito'] as const
 export const AAP_ESTADOS = ['Pago', 'Recojo'] as const
+export const DIAS_LEAD_SIN_CONTACTAR = 2

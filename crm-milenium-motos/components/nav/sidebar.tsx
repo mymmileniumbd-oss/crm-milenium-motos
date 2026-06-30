@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
+  LayoutDashboard,
   Bike,
   Users,
   Columns3,
@@ -18,6 +19,7 @@ import {
 import { signOut } from '@/app/(auth)/login/actions'
 
 const navItems = [
+  { href: '/panel', label: 'Panel', icon: LayoutDashboard },
   { href: '/unidades', label: 'Unidades', icon: Bike },
   { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/prospectos', label: 'Prospectos', icon: Columns3 },

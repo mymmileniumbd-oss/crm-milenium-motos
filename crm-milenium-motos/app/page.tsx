@@ -15,5 +15,5 @@ export default async function RootPage() {
     .single()
 
   if (usuario?.rol === 'gerente') redirect('/dashboard')
-  redirect('/unidades')
+  redirect('/panel')
 }
