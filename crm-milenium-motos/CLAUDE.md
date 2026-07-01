@@ -25,10 +25,10 @@ Next.js 14 App Router. All data fetching in Server Components, all mutations via
 
 **Route groups:**
 - `app/(auth)/` — public (login)
-- `app/(vendedor)/` — vendedor role: unidades, clientes, prospectos, ventas, seguimientos, garantias, tramites, reclamos
+- `app/(vendedor)/` — vendedor role: **panel** (landing), unidades, clientes, prospectos, ventas, seguimientos, garantias, tramites, reclamos
 - `app/(gerente)/` — gerente role: dashboard only (read-only)
 
-**Auth flow:** `middleware.ts` → `lib/supabase/middleware.ts` (session refresh) → role check via `usuarios.rol` → redirect accordingly. A Supabase Auth user with no `usuarios` row is redirected to `/login`.
+**Auth flow:** `middleware.ts` → `lib/supabase/middleware.ts` (session refresh) → role check via `usuarios.rol` → redirect accordingly. A Supabase Auth user with no `usuarios` row is redirected to `/login`. Vendedor lands on `/panel` (not `/unidades`).
 
 **Supabase client pattern:**
 - Server Components / Server Actions: `createServerClient()` from `lib/supabase/server.ts`
@@ -53,6 +53,8 @@ async function handleUpdate(data: FormValues) {
 
 **Month/year filter pattern:** Pages with month filters use URL search params (`?mes=6&anio=2026`). The reusable client component is `components/tramites/tramites-filtro.tsx`. Pages read `searchParams` props and filter fetched data in JS using `string.startsWith(prefijo)` where `prefijo = 'yyyy-MM'`.
 
+**Panel period selector:** `components/panel/periodo-selector.tsx` (`'use client'`) uses `?periodo=dia|semana|mes` combined with `?mes=6&anio=2026` for the month navigator. When `periodo=mes`, the button becomes a `← Junio 2026 →` navigator. Default period is `dia`; default mes/anio is the current month when not specified.
+
 **Client search filter pattern:** `components/clientes/clientes-busqueda.tsx` — input with 300ms debounce pushes `?q=...` to URL; page filters server-fetched data.
 
 ## Business Logic
@@ -68,7 +70,9 @@ async function handleUpdate(data: FormValues) {
 
 **Garantía fibra** = `fecha_entrega + 1 month`. Created automatically in `marcarEntregada`. Both `garantia_moto_inicio` and `garantia_fibra_inicio` are set to `fecha_entrega`.
 
-**Seguimiento 7 días**: only units already delivered (`fecha_entrega IS NOT NULL`) where `fecha_entrega <= today - 7 days AND seguimiento_7dias_hecho = false`. Badge count in sidebar fetched server-side in `app/(vendedor)/layout.tsx`.
+**Seguimiento 7 días**: only units already delivered (`fecha_entrega IS NOT NULL`) where `fecha_entrega <= today - 7 days AND seguimiento_7dias_hecho = false`. Badge count in sidebar fetched server-side in `app/(vendedor)/layout.tsx`. Also surfaced as an alert in the Panel.
+
+**Panel del Vendedor** (`app/(vendedor)/panel/`): daily operational dashboard. 4 independent `<Suspense>` sections — Alertas, Embudo, Cartera, Inventario. All sections are async Server Components (no `'use client'`). Alerts: seguimientos post-venta vencidos + leads sin contactar (`DIAS_LEAD_SIN_CONTACTAR = 2` in constants). Embudo: leads/adelantos/ventas counts + conversion rate for the selected period. Cartera: 3 accordion sub-tables (Separadas, Pendientes entrega, Trámites pendientes). Inventario: 5 model cards always rendered (opacity-50 when 0) + en-camino table.
 
 **Reclamos**: `fecha_resolucion` is set manually when marking resolved (user picks the date). Requires `ALTER TABLE reclamos ADD COLUMN fecha_resolucion DATE;` in DB.
 
@@ -86,13 +90,16 @@ async function handleUpdate(data: FormValues) {
 
 ## Key Files
 
-- `lib/constants.ts` — all enum values (MODELOS_MOTO, ETAPAS_PROSPECTO, COLORES_MOTO, etc.)
+- `lib/constants.ts` — all enum values (MODELOS_MOTO, ETAPAS_PROSPECTO, COLORES_MOTO, DIAS_LEAD_SIN_CONTACTAR, etc.)
 - `lib/utils/estados.ts` — `calcularEstadoPago(suma, precio) → EstadoPago`
 - `lib/utils/fechas.ts` — `calcularDiasTranscurridos`, `calcularGarantiaFibraVencimiento`
 - `lib/utils/format.ts` — `formatSoles(n)` → `"S/ 1,234.50"`
+- `lib/utils/panel.ts` — `calcularRangoPeriodo(periodo, mes?, anio?) → { desde, hasta }` (yyyy-MM-dd strings)
 - `lib/actions/pagos.ts` — `recalcularEstados` helper (shared by editarPago + eliminarPago)
+- `lib/actions/panel.ts` — all Panel queries: alertas, embudo, cartera (x3), inventario (x2)
+- `components/panel/` — Panel sections: `alertas-section`, `embudo-section`, `cartera-section`, `inventario-section`, `periodo-selector`
 - `components/tramites/tramites-filtro.tsx` — reusable mes/año URL filter (used in ventas, tramites, garantias, reclamos)
-- `supabase/migrations/` — 4 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS)
+- `supabase/migrations/` — 5 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS, 005 views)
 
 ## Testing
 
