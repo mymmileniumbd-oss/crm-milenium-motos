@@ -4,10 +4,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
 import { clienteSchema, type ClienteFormValues } from '@/lib/validations/cliente'
 
 export async function crearCliente(data: ClienteFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = clienteSchema.parse(data)
   const payload = { ...validated, correo: validated.correo || null }
 
@@ -23,11 +24,10 @@ export async function crearCliente(data: ClienteFormValues) {
   redirect(`/clientes/${cliente.id}`)
 }
 
-export async function obtenerClientes(search?: string) {
+export async function obtenerClientes() {
   const supabase = createServerClient()
-  let query = supabase.from('clientes').select('*').order('created_at', { ascending: false })
-  if (search) query = query.or(`nombre_completo.ilike.%${search}%,dni.ilike.%${search}%`)
-  const { data, error } = await query
+  const { data, error } = await supabase
+    .from('clientes').select('*').order('created_at', { ascending: false })
   if (error) throw new Error(error.message)
   return data
 }
@@ -43,7 +43,7 @@ export async function obtenerCliente(id: string) {
 }
 
 export async function actualizarCliente(id: string, data: ClienteFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = clienteSchema.parse(data)
   const payload = { ...validated, correo: validated.correo || null }
   const { error } = await supabase.from('clientes').update(payload).eq('id', id)

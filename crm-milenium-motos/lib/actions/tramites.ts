@@ -3,20 +3,15 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
+import { tramiteSchema, type TramiteFormValues } from '@/lib/validations/tramite'
 
-export async function actualizarTramite(
-  unidadId: string,
-  data: {
-    sunarp_estado?: string | null
-    sunarp_fecha?: string | null
-    aap_estado?: string | null
-    aap_fecha?: string | null
-  }
-) {
-  const supabase = createServerClient()
+export async function actualizarTramite(unidadId: string, data: TramiteFormValues) {
+  const { supabase } = await requireRol('vendedor')
+  const validated = tramiteSchema.parse(data)
   const { error } = await supabase
     .from('tramites')
-    .upsert({ unidad_id: unidadId, ...data }, { onConflict: 'unidad_id' })
+    .upsert({ unidad_id: unidadId, ...validated }, { onConflict: 'unidad_id' })
   if (error) throw new Error(error.message)
   revalidatePath(`/unidades/${unidadId}`)
   revalidatePath('/tramites')

@@ -3,10 +3,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
 import { reclamoSchema, type ReclamoFormValues } from '@/lib/validations/reclamo'
 
 export async function crearReclamo(unidadId: string, data: ReclamoFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = reclamoSchema.parse(data)
   const { error } = await supabase.from('reclamos').insert({ ...validated, unidad_id: unidadId })
   if (error) throw new Error(error.message)
@@ -15,7 +16,7 @@ export async function crearReclamo(unidadId: string, data: ReclamoFormValues) {
 }
 
 export async function editarReclamo(reclamoId: string, unidadId: string, data: ReclamoFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = reclamoSchema.parse(data)
   const { error } = await supabase.from('reclamos').update(validated).eq('id', reclamoId)
   if (error) throw new Error(error.message)
@@ -29,7 +30,7 @@ export async function actualizarEstadoReclamo(
   estado: 'Pendiente' | 'Resuelto',
   fechaResolucion?: string
 ) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const update: Record<string, unknown> = { estado }
   update.fecha_resolucion = estado === 'Resuelto' ? (fechaResolucion ?? null) : null
   const { error } = await supabase.from('reclamos').update(update).eq('id', reclamoId)

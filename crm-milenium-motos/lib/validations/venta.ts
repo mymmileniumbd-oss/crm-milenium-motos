@@ -11,3 +11,14 @@ export const ventaSchema = z.object({
 })
 
 export type VentaFormValues = z.infer<typeof ventaSchema>
+
+// Subconjunto de ventaSchema usado por actualizarVenta (no permite cambiar
+// tipo_venta ni cliente_id, solo los campos editables desde la ficha).
+export const ventaUpdateSchema = ventaSchema.pick({
+  fecha_venta: true,
+  precio_venta: true,
+  documento_tipo: true,
+  documento_numero: true,
+})
+
+export type VentaUpdateValues = z.infer<typeof ventaUpdateSchema>

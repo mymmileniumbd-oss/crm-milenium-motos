@@ -2,11 +2,10 @@
 import { z } from 'zod'
 
 export const garantiaSchema = z.object({
-  unidad_id: z.string().uuid('ID de unidad requerido'),
-  fecha_inicio: z.string().min(1, 'La fecha de inicio es requerida'),
-  fecha_vencimiento: z.string().min(1, 'La fecha de vencimiento es requerida'),
-  descripcion: z.string().optional(),
-  estado: z.enum(['Vigente', 'Vencida', 'Anulada']).default('Vigente'),
+  garantia_moto_km: z.number().min(0, 'El kilometraje no puede ser negativo').optional().nullable(),
+  garantia_moto_inicio: z.string().optional().nullable(),
+  garantia_fibra_inicio: z.string().optional().nullable(),
+  garantia_fibra_vencimiento: z.string().optional().nullable(),
 })
 
 export type GarantiaFormValues = z.infer<typeof garantiaSchema>

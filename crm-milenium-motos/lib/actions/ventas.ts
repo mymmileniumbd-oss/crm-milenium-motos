@@ -3,11 +3,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/server'
-import { ventaSchema, type VentaFormValues } from '@/lib/validations/venta'
+import { requireRol } from '@/lib/supabase/auth'
+import { ventaSchema, ventaUpdateSchema, type VentaFormValues } from '@/lib/validations/venta'
+import { calcularEstadoPago, calcularEstadoComercial } from '@/lib/utils/estados'
 
 export async function crearVenta(unidadId: string, data: VentaFormValues) {
-  const supabase = createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await requireRol('vendedor')
   const validated = ventaSchema.parse(data)
 
   // Verificar que la unidad no tiene ya una venta
@@ -21,7 +22,7 @@ export async function crearVenta(unidadId: string, data: VentaFormValues) {
     .insert({
       unidad_id: unidadId,
       cliente_id: validated.cliente_id,
-      vendedor_id: user!.id,
+      vendedor_id: user.id,
       tipo_venta: validated.tipo_venta,
       fecha_venta: validated.fecha_venta,
       precio_venta: validated.precio_venta,
@@ -35,12 +36,15 @@ export async function crearVenta(unidadId: string, data: VentaFormValues) {
   if (error) throw new Error(error.message)
 
   // Asignar cliente a la unidad si no lo tenía
-  await supabase.from('unidades')
+  const { error: unidadError } = await supabase.from('unidades')
     .update({ cliente_id: validated.cliente_id })
     .eq('id', unidadId).is('cliente_id', null)
+  if (unidadError) throw new Error(unidadError.message)
 
   // Crear trámite vacío automáticamente
-  await supabase.from('tramites').upsert({ unidad_id: unidadId }, { onConflict: 'unidad_id' })
+  const { error: tramiteError } = await supabase
+    .from('tramites').upsert({ unidad_id: unidadId }, { onConflict: 'unidad_id' })
+  if (tramiteError) throw new Error(tramiteError.message)
 
   revalidatePath(`/unidades/${unidadId}`)
   revalidatePath('/ventas')
@@ -52,30 +56,41 @@ export async function actualizarVenta(
   unidadId: string,
   data: { fecha_venta: string; precio_venta: number; documento_tipo?: string | null; documento_numero?: string }
 ) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
+  const validated = ventaUpdateSchema.parse(data)
 
   const { error } = await supabase.from('ventas').update({
-    fecha_venta: data.fecha_venta,
-    precio_venta: data.precio_venta,
-    documento_tipo: data.documento_tipo ?? null,
-    documento_numero: data.documento_numero ?? null,
+    fecha_venta: validated.fecha_venta,
+    precio_venta: validated.precio_venta,
+    documento_tipo: validated.documento_tipo ?? null,
+    documento_numero: validated.documento_numero ?? null,
   }).eq('id', ventaId)
   if (error) throw new Error(error.message)
 
   // Recalcular estado_pago con el nuevo precio
-  const { data: pagos } = await supabase.from('pagos').select('monto').eq('venta_id', ventaId)
+  const { data: pagos, error: pagosError } = await supabase.from('pagos').select('monto').eq('venta_id', ventaId)
+  if (pagosError) throw new Error(pagosError.message)
   const suma = (pagos ?? []).reduce((acc, p) => acc + Number(p.monto), 0)
-  const nuevoEstado = suma <= 0 ? 'Pendiente' : suma >= data.precio_venta ? 'Pagado' : 'Parcial'
-  await supabase.from('ventas').update({ estado_pago: nuevoEstado }).eq('id', ventaId)
+  const nuevoEstado = calcularEstadoPago(suma, validated.precio_venta)
+  const { error: estadoPagoError } = await supabase
+    .from('ventas').update({ estado_pago: nuevoEstado }).eq('id', ventaId)
+  if (estadoPagoError) throw new Error(estadoPagoError.message)
 
   // Actualizar estado_comercial si corresponde (sin degradar desde Entregada)
-  const { data: unidad } = await supabase.from('unidades').select('estado_comercial').eq('id', unidadId).single()
-  if (unidad?.estado_comercial !== 'Entregada') {
-    if (nuevoEstado === 'Pagado') {
-      await supabase.from('unidades').update({ estado_comercial: 'Vendida' }).eq('id', unidadId)
-    } else if (unidad?.estado_comercial === 'Vendida') {
-      await supabase.from('unidades').update({ estado_comercial: 'Separada' }).eq('id', unidadId)
-    }
+  const { data: unidad, error: unidadReadError } = await supabase
+    .from('unidades').select('estado_comercial').eq('id', unidadId).single()
+  if (unidadReadError) throw new Error(unidadReadError.message)
+  const estadoComercialActual = unidad?.estado_comercial ?? null
+  const nuevoEstadoComercial = calcularEstadoComercial({
+    estadoActual: estadoComercialActual,
+    estadoPago: nuevoEstado,
+    puedeSepararDesdeNull: false,
+    sinPagos: false,
+  })
+  if (nuevoEstadoComercial !== estadoComercialActual) {
+    const { error: e } = await supabase
+      .from('unidades').update({ estado_comercial: nuevoEstadoComercial }).eq('id', unidadId)
+    if (e) throw new Error(e.message)
   }
 
   revalidatePath(`/unidades/${unidadId}`)
@@ -135,7 +150,7 @@ export async function obtenerSeguimientosPendientes() {
 }
 
 export async function marcarSeguimientoHecho(ventaId: string) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const { error } = await supabase
     .from('ventas').update({ seguimiento_7dias_hecho: true }).eq('id', ventaId)
   if (error) throw new Error(error.message)

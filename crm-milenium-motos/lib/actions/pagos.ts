@@ -3,11 +3,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
 import { pagoSchema, type PagoFormValues } from '@/lib/validations/pago'
-import { calcularEstadoPago } from '@/lib/utils/estados'
+import { calcularEstadoPago, calcularEstadoComercial } from '@/lib/utils/estados'
 
 export async function crearPago(ventaId: string, unidadId: string, data: PagoFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = pagoSchema.parse(data)
 
   // 1. Obtener venta y estado_comercial actual de la unidad
@@ -32,19 +33,24 @@ export async function crearPago(ventaId: string, unidadId: string, data: PagoFor
   const nuevoEstadoPago = calcularEstadoPago(sumaPagos, Number(venta.precio_venta))
 
   // 4. Actualizar estado_pago en venta
-  await supabase.from('ventas').update({ estado_pago: nuevoEstadoPago }).eq('id', ventaId)
+  const { error: estadoPagoError } = await supabase
+    .from('ventas').update({ estado_pago: nuevoEstadoPago }).eq('id', ventaId)
+  if (estadoPagoError) throw new Error(estadoPagoError.message)
 
   // 5. Actualizar estado_comercial en unidad (sin degradar desde Entregada)
-  const estadoComercialActual = unidad?.estado_comercial
-  if (estadoComercialActual !== 'Entregada') {
-    if (nuevoEstadoPago === 'Pagado') {
-      await supabase.from('unidades').update({ estado_comercial: 'Vendida' }).eq('id', unidadId)
-    } else if (validated.tipo === 'Adelanto' && !estadoComercialActual) {
-      const esFirstAdelanto = pagos.filter(p => p.tipo === 'Adelanto').length === 1
-      if (esFirstAdelanto) {
-        await supabase.from('unidades').update({ estado_comercial: 'Separada' }).eq('id', unidadId)
-      }
-    }
+  const estadoComercialActual = unidad?.estado_comercial ?? null
+  const esFirstAdelanto = validated.tipo === 'Adelanto' && !estadoComercialActual
+    && pagos.filter(p => p.tipo === 'Adelanto').length === 1
+  const nuevoEstadoComercial = calcularEstadoComercial({
+    estadoActual: estadoComercialActual,
+    estadoPago: nuevoEstadoPago,
+    puedeSepararDesdeNull: esFirstAdelanto,
+    sinPagos: false,
+  })
+  if (nuevoEstadoComercial !== estadoComercialActual) {
+    const { error: e } = await supabase
+      .from('unidades').update({ estado_comercial: nuevoEstadoComercial }).eq('id', unidadId)
+    if (e) throw new Error(e.message)
   }
 
   revalidatePath(`/unidades/${unidadId}`)
@@ -52,30 +58,42 @@ export async function crearPago(ventaId: string, unidadId: string, data: PagoFor
 }
 
 async function recalcularEstados(supabase: ReturnType<typeof createServerClient>, ventaId: string, unidadId: string) {
-  const [{ data: venta }, { data: pagos }, { data: unidad }] = await Promise.all([
+  const [
+    { data: venta, error: ventaError },
+    { data: pagos, error: pagosError },
+    { data: unidad, error: unidadError },
+  ] = await Promise.all([
     supabase.from('ventas').select('precio_venta').eq('id', ventaId).single(),
     supabase.from('pagos').select('monto').eq('venta_id', ventaId),
     supabase.from('unidades').select('estado_comercial').eq('id', unidadId).single(),
   ])
+  if (ventaError) throw new Error(ventaError.message)
+  if (pagosError) throw new Error(pagosError.message)
+  if (unidadError) throw new Error(unidadError.message)
   if (!venta || !pagos) return
 
   const suma = pagos.reduce((acc, p) => acc + Number(p.monto), 0)
   const nuevoEstadoPago = calcularEstadoPago(suma, Number(venta.precio_venta))
-  await supabase.from('ventas').update({ estado_pago: nuevoEstadoPago }).eq('id', ventaId)
+  const { error: estadoPagoError } = await supabase
+    .from('ventas').update({ estado_pago: nuevoEstadoPago }).eq('id', ventaId)
+  if (estadoPagoError) throw new Error(estadoPagoError.message)
 
-  if (unidad?.estado_comercial !== 'Entregada') {
-    if (nuevoEstadoPago === 'Pagado') {
-      await supabase.from('unidades').update({ estado_comercial: 'Vendida' }).eq('id', unidadId)
-    } else if (suma === 0) {
-      await supabase.from('unidades').update({ estado_comercial: null }).eq('id', unidadId)
-    } else {
-      await supabase.from('unidades').update({ estado_comercial: 'Separada' }).eq('id', unidadId)
-    }
+  const estadoComercialActual = unidad?.estado_comercial ?? null
+  const nuevoEstadoComercial = calcularEstadoComercial({
+    estadoActual: estadoComercialActual,
+    estadoPago: nuevoEstadoPago,
+    puedeSepararDesdeNull: true,
+    sinPagos: suma === 0,
+  })
+  if (nuevoEstadoComercial !== estadoComercialActual) {
+    const { error: e } = await supabase
+      .from('unidades').update({ estado_comercial: nuevoEstadoComercial }).eq('id', unidadId)
+    if (e) throw new Error(e.message)
   }
 }
 
 export async function editarPago(pagoId: string, ventaId: string, unidadId: string, data: PagoFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = pagoSchema.parse(data)
   const { error } = await supabase.from('pagos').update(validated).eq('id', pagoId)
   if (error) throw new Error(error.message)
@@ -85,9 +103,11 @@ export async function editarPago(pagoId: string, ventaId: string, unidadId: stri
 }
 
 export async function eliminarPago(pagoId: string, ventaId: string, unidadId: string) {
-  const supabase = createServerClient()
-  const { error } = await supabase.from('pagos').delete().eq('id', pagoId)
+  const { supabase } = await requireRol('vendedor')
+  const { error, count } = await supabase
+    .from('pagos').delete({ count: 'exact' }).eq('id', pagoId)
   if (error) throw new Error(error.message)
+  if (count === 0) throw new Error('No se pudo eliminar. Verifica los permisos en Supabase.')
   await recalcularEstados(supabase, ventaId, unidadId)
   revalidatePath(`/unidades/${unidadId}`)
   revalidatePath('/ventas')

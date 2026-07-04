@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { addMonths, format } from 'date-fns'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
 import { unidadBaseSchema, compraSchema, fibraSchema, type UnidadBaseValues, type CompraValues, type FibraValues } from '@/lib/validations/unidad'
 
 export interface UnidadFilters {
@@ -56,7 +57,7 @@ export async function obtenerUnidad(id: string) {
 }
 
 export async function crearUnidad(data: UnidadBaseValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = unidadBaseSchema.parse(data)
 
   const { data: unidad, error } = await supabase
@@ -76,7 +77,7 @@ export async function actualizarEstadoLogistico(id: string, estado: string) {
   if (!ESTADOS_PERMITIDOS.includes(estado as typeof ESTADOS_PERMITIDOS[number])) {
     throw new Error('Estado logístico inválido')
   }
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const { error } = await supabase
     .from('unidades').update({ estado_logistico: estado }).eq('id', id)
   if (error) throw new Error(error.message)
@@ -84,7 +85,7 @@ export async function actualizarEstadoLogistico(id: string, estado: string) {
 }
 
 export async function actualizarSeccionCompra(id: string, data: CompraValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = compraSchema.parse(data)
   const { error } = await supabase.from('unidades').update(validated).eq('id', id)
   if (error) throw new Error(error.message)
@@ -92,7 +93,7 @@ export async function actualizarSeccionCompra(id: string, data: CompraValues) {
 }
 
 export async function actualizarSeccionFibra(id: string, data: FibraValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = fibraSchema.parse(data)
   const { error } = await supabase.from('unidades').update(validated).eq('id', id)
   if (error) throw new Error(error.message)
@@ -100,7 +101,7 @@ export async function actualizarSeccionFibra(id: string, data: FibraValues) {
 }
 
 export async function actualizarFechaLlegadaTienda(id: string, fecha: string) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const { error } = await supabase
     .from('unidades').update({ fecha_llegada_tienda: fecha }).eq('id', id)
   if (error) throw new Error(error.message)
@@ -108,7 +109,7 @@ export async function actualizarFechaLlegadaTienda(id: string, fecha: string) {
 }
 
 export async function asignarCliente(unidadId: string, clienteId: string) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const { error } = await supabase
     .from('unidades').update({ cliente_id: clienteId }).eq('id', unidadId)
   if (error) throw new Error(error.message)
@@ -116,7 +117,7 @@ export async function asignarCliente(unidadId: string, clienteId: string) {
 }
 
 export async function eliminarUnidad(id: string) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
 
   const { data: venta } = await supabase
     .from('ventas').select('id').eq('unidad_id', id).maybeSingle()
@@ -134,7 +135,7 @@ export async function marcarEntregada(unidadId: string, fechaEntrega: string, fe
   if (fechaVenta && new Date(fechaEntrega) < new Date(fechaVenta)) {
     throw new Error('La fecha de entrega no puede ser anterior a la fecha de venta')
   }
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
 
   const { data: unidad, error: checkError } = await supabase
     .from('unidades').select('estado_comercial').eq('id', unidadId).single()

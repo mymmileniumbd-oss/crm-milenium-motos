@@ -4,6 +4,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
 import { prospectoSchema, type ProspectoFormValues } from '@/lib/validations/prospecto'
 import { clienteSchema } from '@/lib/validations/cliente'
 
@@ -26,8 +27,7 @@ export async function obtenerProspecto(id: string) {
 }
 
 export async function crearProspecto(data: ProspectoFormValues) {
-  const supabase = createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await requireRol('vendedor')
   const validated = prospectoSchema.parse(data)
 
   const { data: prospecto, error } = await supabase
@@ -45,7 +45,7 @@ export async function actualizarEtapaProspecto(id: string, etapa: string) {
   if (!ETAPAS_PERMITIDAS.includes(etapa as typeof ETAPAS_PERMITIDAS[number])) {
     throw new Error('Etapa inválida')
   }
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const { error } = await supabase
     .from('prospectos')
     .update({ etapa, updated_at: new Date().toISOString() })
@@ -55,7 +55,7 @@ export async function actualizarEtapaProspecto(id: string, etapa: string) {
 }
 
 export async function actualizarProspecto(id: string, data: ProspectoFormValues) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('vendedor')
   const validated = prospectoSchema.parse(data)
   const { error } = await supabase
     .from('prospectos')
@@ -72,8 +72,7 @@ export async function convertirEnVenta(
   unidadId: string,
   ventaData: { tipo_venta: 'Contado' | 'Separación'; fecha_venta: string; precio_venta: number; documento_tipo?: 'Factura' | 'Boleta' | null; documento_numero?: string }
 ) {
-  const supabase = createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user } = await requireRol('vendedor')
 
   // 1. Crear cliente
   const clienteValidated = clienteSchema.parse(clienteData)
@@ -101,15 +100,21 @@ export async function convertirEnVenta(
   if (ventaError) throw new Error(ventaError.message)
 
   // 3. Asignar cliente a la unidad
-  await supabase.from('unidades').update({ cliente_id: cliente.id }).eq('id', unidadId)
+  const { error: unidadError } = await supabase
+    .from('unidades').update({ cliente_id: cliente.id }).eq('id', unidadId)
+  if (unidadError) throw new Error(unidadError.message)
 
   // 4. Crear trámite vacío
-  await supabase.from('tramites').upsert({ unidad_id: unidadId }, { onConflict: 'unidad_id' })
+  const { error: tramiteError } = await supabase
+    .from('tramites').upsert({ unidad_id: unidadId }, { onConflict: 'unidad_id' })
+  if (tramiteError) throw new Error(tramiteError.message)
 
   // 5. Marcar prospecto como Vendido
-  await supabase.from('prospectos')
+  const { error: prospectoError } = await supabase
+    .from('prospectos')
     .update({ etapa: 'Vendido', updated_at: new Date().toISOString() })
     .eq('id', prospectoId)
+  if (prospectoError) throw new Error(prospectoError.message)
 
   revalidatePath('/prospectos')
   revalidatePath('/unidades')

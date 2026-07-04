@@ -3,6 +3,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
+import { garantiaSchema, type GarantiaFormValues } from '@/lib/validations/garantia'
 
 export async function obtenerGarantias() {
   const supabase = createServerClient()
@@ -22,19 +24,12 @@ export async function obtenerGarantias() {
   return data
 }
 
-export async function actualizarGarantia(
-  unidadId: string,
-  data: {
-    garantia_moto_km?: number | null
-    garantia_moto_inicio?: string | null
-    garantia_fibra_inicio?: string | null
-    garantia_fibra_vencimiento?: string | null
-  }
-) {
-  const supabase = createServerClient()
+export async function actualizarGarantia(unidadId: string, data: GarantiaFormValues) {
+  const { supabase } = await requireRol('vendedor')
+  const validated = garantiaSchema.parse(data)
   const { error } = await supabase
     .from('garantias')
-    .upsert({ unidad_id: unidadId, ...data }, { onConflict: 'unidad_id' })
+    .upsert({ unidad_id: unidadId, ...validated }, { onConflict: 'unidad_id' })
   if (error) throw new Error(error.message)
   revalidatePath(`/unidades/${unidadId}`)
   revalidatePath('/garantias')

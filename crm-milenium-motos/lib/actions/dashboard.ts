@@ -1,7 +1,7 @@
 // lib/actions/dashboard.ts
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { requireRol } from '@/lib/supabase/auth'
 
 export interface PeriodoFilter {
   desde: string  // 'YYYY-MM-DD'
@@ -29,7 +29,7 @@ export interface CuentaCobrar {
 }
 
 export async function getDatosVentas(periodo: PeriodoFilter) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
   const { data, error } = await supabase
     .from('ventas')
     .select('precio_venta, unidades(modelo, precio_compra_moto, precio_fibra)')
@@ -40,7 +40,7 @@ export async function getDatosVentas(periodo: PeriodoFilter) {
 }
 
 export async function getDatosCompras(periodo: PeriodoFilter) {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
   const { data, error } = await supabase
     .from('unidades')
     .select('modelo, precio_compra_moto, precio_fibra, fecha_compra')
@@ -52,7 +52,7 @@ export async function getDatosCompras(periodo: PeriodoFilter) {
 }
 
 export async function getUtilidadPorUnidad(periodo: PeriodoFilter): Promise<UtilidadRow[]> {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
   const { data, error } = await supabase
     .from('ventas')
     .select('precio_venta, fecha_venta, clientes(nombre_completo), unidades(n_motor, modelo, precio_compra_moto, precio_fibra)')
@@ -79,7 +79,7 @@ export async function getUtilidadPorUnidad(periodo: PeriodoFilter): Promise<Util
 }
 
 export async function getProspectosPorEtapa(): Promise<Record<string, number>> {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
   const { data, error } = await supabase.from('prospectos').select('etapa')
   if (error) throw new Error(error.message)
   const conteo: Record<string, number> = {}
@@ -88,7 +88,7 @@ export async function getProspectosPorEtapa(): Promise<Record<string, number>> {
 }
 
 export async function getInventario() {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
   const { data, error } = await supabase.from('unidades').select('estado_logistico, estado_comercial')
   if (error) throw new Error(error.message)
   const disponibles = (data ?? []).filter(u => !u.estado_comercial || u.estado_comercial === null)
@@ -107,7 +107,7 @@ export interface KPIs {
 }
 
 export async function getKPIs(periodo: PeriodoFilter): Promise<KPIs> {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
 
   const [ventasRes, pagosRes, unidadesRes, prospectosRes] = await Promise.all([
     supabase
@@ -145,7 +145,7 @@ export async function getKPIs(periodo: PeriodoFilter): Promise<KPIs> {
 }
 
 export async function getCuentasPorCobrar(): Promise<CuentaCobrar[]> {
-  const supabase = createServerClient()
+  const { supabase } = await requireRol('gerente')
   const { data: ventas, error } = await supabase
     .from('ventas')
     .select('id, precio_venta, estado_pago, clientes(nombre_completo), unidades(n_motor, modelo), pagos(monto)')
