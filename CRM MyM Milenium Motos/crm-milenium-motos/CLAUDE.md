@@ -11,6 +11,8 @@ npm run dev          # Start dev server at http://localhost:3000
 npm run build        # Production build (also runs ESLint)
 npm run test         # Run all tests once (Vitest)
 npm run test:watch   # Watch mode
+npm run test:coverage # Vitest with coverage report (@vitest/coverage-v8)
+npm run test:e2e     # Playwright E2E suite (see Testing section)
 npm run lint         # ESLint only
 ```
 
@@ -28,11 +30,11 @@ Next.js 14 App Router. All data fetching in Server Components, all mutations via
 - `app/(vendedor)/` — vendedor role: **panel** (landing), unidades, clientes, prospectos, ventas, seguimientos, garantias, tramites, reclamos
 - `app/(gerente)/` — gerente role: dashboard only (read-only)
 
-**Auth flow:** `middleware.ts` → `lib/supabase/middleware.ts` (session refresh) → role check via `usuarios.rol` → redirect accordingly. A Supabase Auth user with no `usuarios` row is redirected to `/login`. Vendedor lands on `/panel` (not `/unidades`).
+**Auth flow:** `signIn` (`app/(auth)/login/actions.ts`) looks up `usuarios.rol` right after `signInWithPassword` and redirects **directly** to `/panel` or `/dashboard` in one hop — it must never redirect through `/` first. (Historical bug: redirecting to `/` and letting `middleware.ts` issue a second role-based redirect caused the gerente login to hang intermittently for 30-60s+, since that second hop ran as a middleware-issued `NextResponse.redirect` chained after a Server Action redirect. Vendedor never hit it because for vendedor `middleware.ts` passes `/` through and `app/page.tsx`, a Server Component, does the redirect instead.) `middleware.ts` → `lib/supabase/middleware.ts` (session refresh) still enforces role-based access as a safety net on every subsequent navigation (redirects a gerente away from any non-`/dashboard` path and vice versa). A Supabase Auth user with no `usuarios` row is redirected to `/login`.
 
 **Supabase client pattern:**
 - Server Components / Server Actions: `createServerClient()` from `lib/supabase/server.ts`
-- Client Components: `createBrowserClient()` from `lib/supabase/client.ts`
+- No client-side Supabase client exists (`lib/supabase/client.ts` was removed as dead code — nothing used `createBrowserClient()`). Re-add it only if a Client Component genuinely needs direct Supabase access.
 - `lib/supabase/types.ts` is currently `export type Database = any` (placeholder until `npx supabase gen types` is run against the linked project)
 
 **Server Actions** live in `lib/actions/` (one file per entity). They always: validate with Zod, call `createServerClient()`, then `revalidatePath()`.
@@ -100,11 +102,14 @@ async function handleUpdate(data: FormValues) {
 - `lib/actions/panel.ts` — all Panel queries: alertas, embudo, cartera (x3), inventario (x2)
 - `components/panel/` — Panel sections: `alertas-section`, `embudo-section`, `cartera-section`, `inventario-section`, `periodo-selector`
 - `components/tramites/tramites-filtro.tsx` — reusable mes/año URL filter (used in ventas, tramites, garantias, reclamos)
-- `supabase/migrations/` — 6 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS, 005 views, 006 view security_invoker)
+- `supabase/migrations/` — 7 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS, 005 views, 006 view security_invoker, 007 delete policies)
+- `docs/CODEMAPS/` — token-lean architecture/backend/frontend/data/dependencies reference docs, generated from the codebase; re-run `/ecc:update-codemaps` after major structural changes to keep them fresh
 
 ## Testing
 
-Tests cover utility functions only (no DB, no components). Located in `lib/utils/__tests__/` and `lib/validations/__tests__/`. Vitest with `globals: true` (no need to import `describe`/`it`/`expect`). TZ forced to UTC in `vitest.config.ts` to avoid date-shift issues.
+**Unit/integration (Vitest):** cover utility functions (`lib/utils/__tests__/`) and Zod validation schemas (`lib/validations/__tests__/`) — no DB, no components (deliberate scope, not a gap). Every file in `lib/validations/` has a matching test file. Vitest with `globals: true` (no need to import `describe`/`it`/`expect`). TZ forced to UTC in `vitest.config.ts` to avoid date-shift issues. `vitest.config.ts` excludes `e2e/` so Vitest doesn't try to run Playwright specs.
+
+**E2E (Playwright):** `e2e/*.spec.ts` covers login for both roles, read-only navigation, a full create+delete cycle for `unidad` (the only entity with a real delete action), and the full prospecto → venta → pago conversion flow. Requires a local `.env.e2e.local` (gitignored, not committed) with `E2E_VENDEDOR_EMAIL`/`E2E_VENDEDOR_PASSWORD`/`E2E_GERENTE_EMAIL`/`E2E_GERENTE_PASSWORD` — see `e2e/helpers/credentials.ts`. **The app has no delete action for `cliente`/`prospecto`/`venta`** (only `eliminarUnidad` and `eliminarPago`; FKs are `RESTRICT` not `CASCADE`), so `e2e/venta-flow.spec.ts` intentionally leaves `E2E-TEST`-prefixed rows behind in whatever Supabase project `.env.local` points at — clean those up manually (or via SQL) after running it against a real/shared database.
 
 ## UI
 

@@ -10,6 +10,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     env: { TZ: 'UTC' },
+    exclude: ['**/node_modules/**', '**/e2e/**'],
   },
   resolve: {
     alias: { '@': path.resolve(__dirname, './') },

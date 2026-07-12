@@ -1,6 +1,11 @@
 // lib/utils/__tests__/fechas.test.ts
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { calcularGarantiaFibraVencimiento, esSeguimientoPendiente, calcularDiasTranscurridos } from '../fechas'
+import {
+  calcularGarantiaFibraVencimiento,
+  calcularGarantiaFibraVencimientoStr,
+  esSeguimientoPendiente,
+  calcularDiasTranscurridos,
+} from '../fechas'
 
 describe('calcularGarantiaFibraVencimiento', () => {
   it('agrega 1 mes a fecha normal', () => {
@@ -17,6 +22,18 @@ describe('calcularGarantiaFibraVencimiento', () => {
     const inicio = new Date('2025-12-10')
     const resultado = calcularGarantiaFibraVencimiento(inicio)
     expect(resultado.toISOString().startsWith('2026-01-10')).toBe(true)
+  })
+})
+
+describe('calcularGarantiaFibraVencimientoStr', () => {
+  it('agrega 1 mes a un string yyyy-MM-dd normal', () => {
+    expect(calcularGarantiaFibraVencimientoStr('2026-01-15')).toBe('2026-02-15')
+  })
+  it('maneja fin de mes correctamente (ene 31 → feb 28)', () => {
+    expect(calcularGarantiaFibraVencimientoStr('2026-01-31')).toBe('2026-02-28')
+  })
+  it('maneja cambio de año (dic → ene)', () => {
+    expect(calcularGarantiaFibraVencimientoStr('2025-12-10')).toBe('2026-01-10')
   })
 })
 

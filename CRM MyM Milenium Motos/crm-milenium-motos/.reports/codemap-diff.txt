@@ -1,0 +1,28 @@
+Codemap generation report — 2026-07-12
+=========================================
+
+Status: INITIAL GENERATION (no prior docs/CODEMAPS/ existed)
+
+Files created:
+  docs/CODEMAPS/architecture.md
+  docs/CODEMAPS/backend.md
+  docs/CODEMAPS/frontend.md
+  docs/CODEMAPS/data.md
+  docs/CODEMAPS/dependencies.md
+
+Files scanned: ~90 source files (app/, components/, lib/, supabase/migrations/)
+
+Preceding context: this scan runs immediately after a refactor-clean pass that removed:
+  - 3 unreferenced files (components/ui/sheet.tsx, lib/supabase/client.ts,
+    lib/validations/usuario.ts)
+  - 6 unused constants from lib/constants.ts (duplicated by hardcoded Zod enums)
+  - 5 unused npm dependencies (@base-ui/react, @dnd-kit/*, tw-animate-css)
+  Build and vitest suite (41/41) verified green after each change.
+
+Flagged for follow-up (kept, not deleted — see backend.md footnote):
+  - lib/actions/garantias.ts: actualizarGarantia (no caller)
+  - lib/actions/pagos.ts: obtenerPagosByVenta (no caller)
+  - lib/actions/unidades.ts: asignarCliente (no caller)
+  - lib/actions/ventas.ts: obtenerVenta (no caller; obtenerVentas plural IS used)
+
+Staleness: N/A (first generation).

@@ -33,4 +33,16 @@ describe('calcularRangoPeriodo', () => {
     expect(desde).toBe('2026-05-31')
     expect(hasta).toBe('2026-05-31')
   })
+
+  it('mes con mes/anio explícitos: retorna el rango de ese mes, no el actual', () => {
+    const { desde, hasta } = calcularRangoPeriodo('mes', 2, 2026)
+    expect(desde).toBe('2026-02-01')
+    expect(hasta).toBe('2026-02-28')
+  })
+
+  it('mes con solo mes definido (sin anio): ignora el parcial y usa el mes en curso', () => {
+    const { desde, hasta } = calcularRangoPeriodo('mes', 2, undefined)
+    expect(desde).toBe('2026-06-01')
+    expect(hasta).toBe('2026-06-30')
+  })
 })
