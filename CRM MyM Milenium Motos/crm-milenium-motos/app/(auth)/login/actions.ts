@@ -9,13 +9,19 @@ export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
     return { error: 'Credenciales incorrectas. Intente de nuevo.' }
   }
 
-  redirect('/')
+  const { data: usuario } = await supabase
+    .from('usuarios')
+    .select('rol')
+    .eq('id', data.user.id)
+    .single()
+
+  redirect(usuario?.rol === 'gerente' ? '/dashboard' : '/panel')
 }
 
 export async function signOut() {
