@@ -20,5 +20,3 @@ export const ventaUpdateSchema = ventaSchema.pick({
   documento_tipo: true,
   documento_numero: true,
 })
-
-export type VentaUpdateValues = z.infer<typeof ventaUpdateSchema>
