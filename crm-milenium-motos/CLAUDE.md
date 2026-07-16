@@ -59,8 +59,6 @@ async function handleUpdate(data: FormValues) {
 
 **Client search filter pattern:** `components/clientes/clientes-busqueda.tsx` — input with 300ms debounce pushes `?q=...` to URL; page filters server-fetched data.
 
-**PWA / service worker:** `public/sw.js` is hand-written (no Workbox/next-pwa), registered client-side by `components/pwa/service-worker-register.tsx` (mounted in `app/layout.tsx`). It deliberately precaches only `/offline` + static icons and **never caches HTML navigations** — navigations are network-first with `/offline` as the catch fallback — to avoid leaking one user's authenticated page into another user's cache. Static assets (`_next/static/`, images) are cache-first with background revalidation. `app/manifest.ts` defines the installable manifest. Bump `CACHE_NAME` in `sw.js` when precached assets change.
-
 ## Business Logic
 
 **Estado comercial state machine** (auto, in `crearPago` / `recalcularEstados`):
