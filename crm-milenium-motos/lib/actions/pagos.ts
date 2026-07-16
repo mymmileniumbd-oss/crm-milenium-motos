@@ -95,8 +95,10 @@ async function recalcularEstados(supabase: ReturnType<typeof createServerClient>
 export async function editarPago(pagoId: string, ventaId: string, unidadId: string, data: PagoFormValues) {
   const { supabase } = await requireRol('vendedor')
   const validated = pagoSchema.parse(data)
-  const { error } = await supabase.from('pagos').update(validated).eq('id', pagoId)
+  const { error, count } = await supabase
+    .from('pagos').update(validated, { count: 'exact' }).eq('id', pagoId)
   if (error) throw new Error(error.message)
+  if (count === 0) throw new Error('No se pudo editar. Verifica los permisos en Supabase.')
   await recalcularEstados(supabase, ventaId, unidadId)
   revalidatePath(`/unidades/${unidadId}`)
   revalidatePath('/ventas')
