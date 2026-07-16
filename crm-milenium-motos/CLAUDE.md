@@ -106,6 +106,10 @@ async function handleUpdate(data: FormValues) {
 - `supabase/migrations/` — 8 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS, 005 views, 006 view security_invoker, 007 delete policies, 008 pagos update policy — idempotent, documents a policy that already existed in prod via undocumented drift)
 - `docs/CODEMAPS/` — token-lean architecture/backend/frontend/data/dependencies reference docs, generated from the codebase; re-run `/ecc:update-codemaps` after major structural changes to keep them fresh
 
+## Supabase CLI
+
+The repo is linked (`npx supabase link --project-ref <ref>`, project ref taken from `NEXT_PUBLIC_SUPABASE_URL`) — `supabase/.temp/` holds the local link cache (project ref, pooler URL) and is gitignored, never commit it. The remote migration history table (`supabase_migrations.schema_migrations`) has been repaired to mark all 8 existing migrations as applied (`supabase migration repair --status applied --linked 001 002 003 004 005 006 007 008`), since the schema was originally built by hand in the Dashboard SQL Editor rather than via CLI pushes. `npx supabase migration list` should show matching `local`/`remote` versions for 001-008; going forward, new migration files can be applied with `npx supabase db push` instead of the Dashboard.
+
 ## Testing
 
 **Unit/integration (Vitest):** cover utility functions (`lib/utils/__tests__/`) and Zod validation schemas (`lib/validations/__tests__/`) — no DB, no components (deliberate scope, not a gap). Every file in `lib/validations/` has a matching test file. Vitest with `globals: true` (no need to import `describe`/`it`/`expect`). TZ forced to UTC in `vitest.config.ts` to avoid date-shift issues. `vitest.config.ts` excludes `e2e/` so Vitest doesn't try to run Playwright specs.
