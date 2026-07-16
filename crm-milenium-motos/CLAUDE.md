@@ -90,6 +90,7 @@ async function handleUpdate(data: FormValues) {
 - `reclamos` has `fecha_resolucion DATE` — added via `ALTER TABLE`.
 - RLS policies required per operation: SELECT, INSERT, UPDATE, DELETE are separate. `pagos` and `unidades` need explicit DELETE policies.
 - `vista_master` must keep `security_invoker = true` (006_view_security_invoker.sql) — without it, the view runs with the owner's privileges and bypasses the base tables' RLS (e.g. would leak every vendedor's email through the `usuarios` join).
+- `pagos_update` RLS policy (008_pagos_update_policy.sql) existed in the live Supabase project from an undocumented manual change (created directly in the Dashboard, never captured as a migration) — 001-007 alone never created it. Without it, `editarPago` would silently no-op (Postgres denies an UPDATE with no matching policy without raising an error, 0 rows affected) instead of throwing. 008 is written idempotent (`DO` block checking `pg_policies` first) so it's safe to run against both a fresh environment (where it creates the policy) and this project (where it's already a no-op). `editarPago` in `lib/actions/pagos.ts` also now checks `count === 0` and throws, matching `eliminarPago`.
 
 ## Key Files
 
@@ -102,7 +103,7 @@ async function handleUpdate(data: FormValues) {
 - `lib/actions/panel.ts` — all Panel queries: alertas, embudo, cartera (x3), inventario (x2)
 - `components/panel/` — Panel sections: `alertas-section`, `embudo-section`, `cartera-section`, `inventario-section`, `periodo-selector`
 - `components/tramites/tramites-filtro.tsx` — reusable mes/año URL filter (used in ventas, tramites, garantias, reclamos)
-- `supabase/migrations/` — 7 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS, 005 views, 006 view security_invoker, 007 delete policies)
+- `supabase/migrations/` — 8 SQL files (001 enums, 002 tables, 003 indexes, 004 RLS, 005 views, 006 view security_invoker, 007 delete policies, 008 pagos update policy — idempotent, documents a policy that already existed in prod via undocumented drift)
 - `docs/CODEMAPS/` — token-lean architecture/backend/frontend/data/dependencies reference docs, generated from the codebase; re-run `/ecc:update-codemaps` after major structural changes to keep them fresh
 
 ## Testing
